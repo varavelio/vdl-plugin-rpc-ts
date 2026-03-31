@@ -215,7 +215,7 @@ const NODE_ADAPTER = dedent(/* ts */ `
 /**
  * Options for createNodeHandler.
  */
-export interface NodeHandlerOptions<T> {
+export interface NodeHandlerOptions {
   /**
    * URL path prefix to strip before parsing RPC/operation names.
    * Example: "/rpc" or "/api/v1"

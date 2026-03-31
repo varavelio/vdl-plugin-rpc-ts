@@ -168,7 +168,7 @@ const FETCH_ADAPTER = dedent(/* ts */ `
   /**
    * Options for createFetchHandler.
    */
-  export interface FetchHandlerOptions<T> {
+  export interface FetchHandlerOptions {
     /**
      * URL path prefix to strip before parsing RPC/operation names.
      * Example: "/rpc" or "/api/v1"
