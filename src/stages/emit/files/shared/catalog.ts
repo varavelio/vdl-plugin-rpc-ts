@@ -1,4 +1,5 @@
 import { unwrapLiteral } from "@varavel/vdl-plugin-sdk/utils/ir";
+import { indent } from "@varavel/vdl-plugin-sdk/utils/strings";
 import type {
   GeneratorContext,
   OperationDescriptor,
@@ -9,11 +10,11 @@ import type {
  */
 export function renderCatalogSource(context: GeneratorContext): string {
   const procedures = context.procedures
-    .map((operation) => `  ${renderOperationDefinitionLiteral(operation)},`)
+    .map((operation) => `${renderOperationDefinitionLiteral(operation)},`)
     .join("\n");
 
   const streams = context.streams
-    .map((operation) => `  ${renderOperationDefinitionLiteral(operation)},`)
+    .map((operation) => `${renderOperationDefinitionLiteral(operation)},`)
     .join("\n");
 
   const paths = context.services
@@ -66,15 +67,17 @@ function renderOperationDefinitionLiteral(
       : {}),
   }));
 
-  return JSON.stringify(
-    {
-      rpcName: operation.rpcName,
-      name: operation.name,
-      type: operation.kind,
-      path: `/${operation.rpcName}/${operation.name}`,
-      annotations,
-    },
-    null,
-    2,
+  return indent(
+    JSON.stringify(
+      {
+        rpcName: operation.rpcName,
+        name: operation.name,
+        type: operation.kind,
+        path: `/${operation.rpcName}/${operation.name}`,
+        annotations,
+      },
+      null,
+      2,
+    ),
   );
 }
