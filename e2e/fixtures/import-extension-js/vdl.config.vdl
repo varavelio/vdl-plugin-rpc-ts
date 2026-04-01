@@ -1,0 +1,33 @@
+const config = {
+  version 1
+  plugins [
+    {
+      src "varavelio/vdl-plugin-ts@v0.1.3"
+      schema "./schema.vdl"
+      outDir "./gen"
+      options {
+        importExtension "js"
+      }
+    }
+    {
+      src "../../../dist/index.js"
+      schema "./schema.vdl"
+      outDir "./gen"
+      options {
+        target "client"
+        typesImport "./index.js"
+        importExtension "js"
+      }
+    }
+    {
+      src "../../../dist/index.js"
+      schema "./schema.vdl"
+      outDir "./gen"
+      options {
+        target "server"
+        typesImport "./index.js"
+        importExtension "js"
+      }
+    }
+  ]
+}
