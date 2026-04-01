@@ -1,0 +1,21 @@
+@rpc
+type Service {
+  @proc
+  echo {
+    input {
+      i int
+      f float
+      b bool
+      s string
+      d datetime
+    }
+
+    output {
+      i int
+      f float
+      b bool
+      s string
+      d datetime
+    }
+  }
+}
