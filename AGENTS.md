@@ -1,10 +1,12 @@
-# VDL Plugin Template
+# VDL RPC TypeScript Plugin
 
 ## Summary
 
 VDL is the open-source cross-language definition engine for modern stacks. Define your data structures, APIs, contracts, and generate type-safe code for your backend and frontend instantly.
 
-This project contains a VDL plugin written in TypeScript that is responsible for generating code that the VDL binary will then write to the user's system or for returning errors that will be displayed to the user when attempting to generate code using this plugin.
+This project contains a VDL plugin written in TypeScript that generates RPC-specific TypeScript code from annotation-based VDL services.
+
+It intentionally does not generate business types, enums, or constants. Those come from `varavelio/vdl-plugin-ts`, and this plugin consumes that output through the required `typesImport` option.
 
 To create the plugin, we are using the VDL Plugin SDK. It is IMPERATIVE that you download and read the manual for using the SDK BEFORE starting ANY task, as it defines and explains many important things. It is also important that you use the manual information when writing tests or any utility code, as it contains helpers that should be used whenever possible to avoid duplicating code and keep the code of all VDL plugins in a similar way.
 
@@ -20,4 +22,7 @@ When updating this document, do so with the context of the entire document in mi
 
 - Keep implementations aligned with SDK patterns from the manual.
 - Use the SDK utility functions when possible to avoid duplicating code.
-- `e2e/` this directory contains end to end tests. Recommended structure: one fixture folder per test.
+- The source is organized by stages: `options` -> `model` -> `emit`, with shared helpers in `src/shared/`.
+- `src/stages/emit/files/client/` and `src/stages/emit/files/server/` keep target-specific emit logic separate, with runtime source isolated per target.
+- Generated RPC code should reuse `vdl-plugin-ts` runtime helpers for validation and hydration instead of re-implementing business type logic.
+- `e2e/fixtures/` contains static end-to-end fixtures ported from the old RPC test corpus. Each fixture is self-contained and validated by running VDL generation, TypeScript compilation, and runtime execution.
