@@ -1,0 +1,30 @@
+type Address {
+  street string
+  city string
+}
+
+type Person {
+  name string
+  address Address
+}
+
+@rpc
+type Service {
+  @proc
+  validatePerson {
+    input {
+      person Person
+    }
+
+    output {}
+  }
+
+  @proc
+  validateArray {
+    input {
+      people Person[]
+    }
+
+    output {}
+  }
+}
