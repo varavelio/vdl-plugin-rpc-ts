@@ -93,6 +93,18 @@ describe("generate", () => {
       "export const VDLProcedures: OperationDefinition[] = [",
     );
     expect(fileContent(output, "client.ts")).toContain(
+      "public readonly rpcs: ClientRPCRegistry;",
+    );
+    expect(fileContent(output, "client.ts")).toContain(
+      "messages(): ClientMessagesRPC",
+    );
+    expect(fileContent(output, "client.ts")).toContain(
+      "public readonly procs: ClientMessagesProcs;",
+    );
+    expect(fileContent(output, "client.ts")).toContain(
+      "sendMessage(): ProcMessagessendMessageBuilder",
+    );
+    expect(fileContent(output, "client.ts")).toContain(
       "withRetries(config: Partial<RetryConfig>)",
     );
     expect(fileContent(output, "client.ts")).toContain('"name": "cache"');
@@ -110,6 +122,9 @@ describe("generate", () => {
     );
     expect(fileContent(output, "client.ts")).toContain(
       "setRPCHeaderProvider(rpcName: string, provider: HeaderProvider)",
+    );
+    expect(fileContent(output, "client.ts")).toContain(
+      'this.intClient.setRPCRetryConfig("Messages", normalizeRetryConfig(config, 3));',
     );
   });
 
