@@ -1,0 +1,70 @@
+// String enum with implicit values (name = value)
+enum Color {
+  Red
+  Green
+  Blue
+}
+
+// Int enum for testing
+enum Priority {
+  Low = 1
+  Medium = 2
+  High = 3
+}
+
+// String enum with explicit values (name != value)
+enum LogLevel {
+  Debug = "DEBUG"
+  Info = "INFO"
+  Warning = "WARN"
+  Error = "ERROR"
+  Critical = "CRITICAL"
+}
+
+// Container type for optional enum fields
+type Container {
+  color? Color
+  priority? Priority
+  logLevel? LogLevel
+}
+
+@rpc
+type Service {
+  // Echo valid enum values
+  @proc
+  echo {
+    input {
+      color Color
+      priority Priority
+    }
+
+    output {
+      color Color
+      priority Priority
+    }
+  }
+
+  // Test optional enum fields
+  @proc
+  echoOptional {
+    input {
+      container Container
+    }
+
+    output {
+      container Container
+    }
+  }
+
+  // Test explicit-value enum
+  @proc
+  echoLogLevel {
+    input {
+      level LogLevel
+    }
+
+    output {
+      level LogLevel
+    }
+  }
+}
