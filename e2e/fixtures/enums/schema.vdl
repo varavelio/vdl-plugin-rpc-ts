@@ -1,0 +1,26 @@
+enum Color {
+  Red
+  Green
+  Blue
+}
+
+enum Priority {
+  Low = 1
+  High = 2
+}
+
+@rpc
+type Service {
+  @proc
+  test {
+    input {
+      c Color
+      p Priority
+    }
+
+    output {
+      c Color
+      p Priority
+    }
+  }
+}
