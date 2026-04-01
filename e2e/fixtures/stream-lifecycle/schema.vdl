@@ -1,0 +1,13 @@
+@rpc
+type Streamer {
+  @stream
+  counter {
+    input {
+      count int
+    }
+
+    output {
+      value int
+    }
+  }
+}
