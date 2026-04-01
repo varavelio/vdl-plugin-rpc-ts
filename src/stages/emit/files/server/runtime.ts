@@ -106,39 +106,101 @@ const SERVER_RUNTIME = dedent(/* ts */ `
   // Middleware Types
   // -----------------------------------------------------------------------------
 
-  /** A handler used by global middleware. */
+  /**
+   * A handler function for global middleware.
+   * At this level, input and output types are unknown.
+   *
+   * @typeParam T - The application context type (props).
+   */
   export type GlobalHandlerFunc<T> = (c: HandlerContext<T, unknown>) => Promise<unknown>;
 
-  /** Middleware applied to every procedure and stream. */
+  /**
+   * Middleware that applies to all requests (procedures and streams).
+   * Wraps the next handler in the chain.
+   *
+   * @typeParam T - The application context type (props).
+   */
   export type GlobalMiddlewareFunc<T> = (next: GlobalHandlerFunc<T>) => GlobalHandlerFunc<T>;
 
-  /** Typed procedure handler. */
+  /**
+   * The core logic for a procedure.
+   * Receives context with typed input and returns a Promise with typed output.
+   *
+   * @typeParam T - The application context type (props).
+   * @typeParam I - The input payload type.
+   * @typeParam O - The output payload type.
+   */
   export type ProcHandlerFunc<T, I, O> = (c: HandlerContext<T, I>) => Promise<O>;
 
-  /** Typed procedure middleware. */
+  /**
+   * Middleware specific to procedures.
+   * Can inspect or modify typed input and output.
+   *
+   * @typeParam T - The application context type (props).
+   * @typeParam I - The input payload type.
+   * @typeParam O - The output payload type.
+   */
   export type ProcMiddlewareFunc<T, I, O> = (next: ProcHandlerFunc<T, I, O>) => ProcHandlerFunc<T, I, O>;
 
-  /** Function used to emit one stream event. */
+  /**
+   * Function used to emit an event to a stream.
+   *
+   * @typeParam T - The application context type (props).
+   * @typeParam I - The input payload type of the stream.
+   * @typeParam O - The output payload type of the emitted event.
+   */
   export type EmitFunc<T, I, O> = (c: HandlerContext<T, I>, output: O) => Promise<void>;
 
-  /** Typed stream handler. */
+  /**
+   * The core logic for a stream.
+   * Receives context with typed input and an emit function to send events.
+   *
+   * @typeParam T - The application context type (props).
+   * @typeParam I - The input payload type.
+   * @typeParam O - The output event type.
+   */
   export type StreamHandlerFunc<T, I, O> = (c: HandlerContext<T, I>, emit: EmitFunc<T, I, O>) => Promise<void>;
 
-  /** Typed stream middleware. */
+  /**
+   * Middleware specific to stream handlers.
+   * Wraps the execution of the stream function itself.
+   *
+   * @typeParam T - The application context type (props).
+   * @typeParam I - The input payload type.
+   * @typeParam O - The output event type.
+   */
   export type StreamMiddlewareFunc<T, I, O> = (next: StreamHandlerFunc<T, I, O>) => StreamHandlerFunc<T, I, O>;
 
-  /** Typed emit middleware. */
+  /**
+   * Middleware that wraps the emit function of a stream.
+   * Can be used to transform outgoing events or handle cross-cutting concerns.
+   *
+   * @typeParam T - The application context type (props).
+   * @typeParam I - The input payload type of the stream.
+   * @typeParam O - The output payload type of the emitted event.
+   */
   export type EmitMiddlewareFunc<T, I, O> = (next: EmitFunc<T, I, O>) => EmitFunc<T, I, O>;
 
-  /** Input deserializer used internally by the generated server. */
+  /**
+   * Internal function used to deserialize raw JSON input into typed objects.
+   */
   export type DeserializerFunc = (raw: unknown) => Promise<unknown>;
 
-  /** Error handler that maps arbitrary failures into VdlError values. */
+  /**
+   * Custom error handler used to transform arbitrary failures into VdlError responses.
+   *
+   * @typeParam T - The application context type (props).
+   */
   export type ErrorHandlerFunc<T> = (c: HandlerContext<T, unknown>, error: unknown) => VdlError;
 
-  /** Stream-level configuration. */
+  /**
+   * Configuration for stream behavior.
+   */
   export interface StreamConfig {
-    /** Interval in milliseconds between SSE ping comments. */
+    /**
+     * Interval in milliseconds at which ping comments are sent to the client.
+     * Used to keep the connection alive and detect disconnected clients.
+     */
     pingIntervalMs?: number;
   }
 
@@ -147,7 +209,14 @@ const SERVER_RUNTIME = dedent(/* ts */ `
   // -----------------------------------------------------------------------------
 
   /**
-   * InternalServer contains the transport-agnostic request processing engine used by the generated facade.
+   * The core server engine used by generated VDL server wrappers.
+   *
+   * This class manages request routing, middleware execution, input deserialization,
+   * error handling, and response formatting for both procedures and streams.
+   *
+   * Do not instantiate directly. Use the generated server facade.
+   *
+   * @typeParam T - The application context type (props) containing dependencies.
    */
   export class InternalServer<T> {
     private readonly operationDefs: Map<string, Map<string, OperationDefinition>>;
@@ -166,6 +235,12 @@ const SERVER_RUNTIME = dedent(/* ts */ `
     private globalErrorHandler?: ErrorHandlerFunc<T>;
     private readonly rpcErrorHandlers: Map<string, ErrorHandlerFunc<T>>;
 
+    /**
+     * Creates a new internal server.
+     *
+     * @param procDefs - Procedure definitions from the schema.
+     * @param streamDefs - Stream definitions from the schema.
+     */
     constructor(procDefs: OperationDefinition[], streamDefs: OperationDefinition[]) {
       this.operationDefs = new Map();
       this.procHandlers = new Map();
