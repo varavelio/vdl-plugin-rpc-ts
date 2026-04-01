@@ -29,7 +29,8 @@
     "enabled": true,
     "rules": {
       "recommended": true
-    }
+    },
+    "includes": ["!**/e2e/fixtures"]
   },
   "javascript": {
     "formatter": {
