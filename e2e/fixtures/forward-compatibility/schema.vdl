@@ -1,0 +1,12 @@
+@rpc
+type Service {
+  @proc
+  getData {
+    input {}
+
+    output {
+      name string
+      value int
+    }
+  }
+}
