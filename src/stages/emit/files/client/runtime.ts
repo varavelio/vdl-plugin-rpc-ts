@@ -214,6 +214,9 @@ const CLIENT_RUNTIME = dedent(/* ts */ `
     return applyJitter(delay, config.jitter);
   }
 
+  /**
+   * Normalizes retry config input into safe runtime values.
+   */
   function normalizeRetryConfig(
     config: Partial<RetryConfig>,
     defaultAttempts = 1,
@@ -228,12 +231,18 @@ const CLIENT_RUNTIME = dedent(/* ts */ `
     };
   }
 
+  /**
+   * Normalizes timeout config input into safe runtime values.
+   */
   function normalizeTimeoutConfig(config: Partial<TimeoutConfig>): TimeoutConfig {
     return {
       timeoutMs: Math.max(0, config.timeoutMs ?? defaultTimeoutConfig.timeoutMs),
     };
   }
 
+  /**
+   * Normalizes reconnect config input into safe runtime values.
+   */
   function normalizeReconnectConfig(
     config: Partial<ReconnectConfig>,
     defaultAttempts = 30,
@@ -466,6 +475,9 @@ const CLIENT_RUNTIME = dedent(/* ts */ `
       this.rpcHeaderProviders.get(rpcName)?.push(provider);
     }
 
+    /**
+     * Resolves one operation definition and verifies its expected kind.
+     */
     private getOperation(
       rpcName: string,
       operationName: string,
@@ -589,6 +601,9 @@ const CLIENT_RUNTIME = dedent(/* ts */ `
       }
     }
 
+    /**
+     * Executes the interceptor chain around the provided invoker.
+     */
     private async executeChain(
       reqInfo: RequestInfo,
       invoker: Invoker,
@@ -602,6 +617,9 @@ const CLIENT_RUNTIME = dedent(/* ts */ `
       return next(reqInfo);
     }
 
+    /**
+     * Evaluates whether the current failure should trigger another attempt.
+     */
     private async shouldRetry(
       config: RetryConfig,
       context: RetryDecisionContext,
@@ -613,6 +631,9 @@ const CLIENT_RUNTIME = dedent(/* ts */ `
       return await config.shouldRetry(context);
     }
 
+    /**
+     * Evaluates whether the current stream failure should trigger reconnect.
+     */
     private async shouldReconnect(
       config: ReconnectConfig,
       context: ReconnectDecisionContext,
@@ -624,6 +645,9 @@ const CLIENT_RUNTIME = dedent(/* ts */ `
       return await config.shouldReconnect(context);
     }
 
+    /**
+     * Executes one procedure call with retries, timeout, headers, and interceptors.
+     */
     async callProc(
       rpcName: string,
       procName: string,
@@ -931,6 +955,9 @@ const CLIENT_RUNTIME = dedent(/* ts */ `
       return this.executeChain(reqInfo, invoker) as Promise<Response<any>>;
     }
 
+    /**
+     * Opens one stream subscription and returns an async event generator plus a cancel handle.
+     */
     callStream(
       rpcName: string,
       streamName: string,
@@ -1298,12 +1325,17 @@ const CLIENT_RUNTIME = dedent(/* ts */ `
     }
   }
 
+  /**
+   * Internal mutator applied while building an internalClient instance.
+   */
   type internalClientOption = (client: internalClient) => void;
 
+  /** Creates an option that replaces the fetch implementation. */
   function withFetch(fetchFn: FetchLike): internalClientOption {
     return (client) => client.setFetch(fetchFn);
   }
 
+  /** Creates an option that appends one static global header provider. */
   function withGlobalHeader(key: string, value: string): internalClientOption {
     return (client) =>
       client.addHeaderProvider((headers) => {
@@ -1311,38 +1343,48 @@ const CLIENT_RUNTIME = dedent(/* ts */ `
       });
   }
 
+  /** Creates an option that appends one dynamic global header provider. */
   function withHeaderProvider(provider: HeaderProvider): internalClientOption {
     return (client) => client.addHeaderProvider(provider);
   }
 
+  /** Creates an option that appends one interceptor. */
   function withInterceptor(interceptor: Interceptor): internalClientOption {
     return (client) => client.addInterceptor(interceptor);
   }
 
+  /** Creates an option that sets the global retry policy. */
   function withGlobalRetryConfig(conf: RetryConfig): internalClientOption {
     return (client) => client.setGlobalRetryConfig(conf);
   }
 
+  /** Creates an option that sets the global timeout policy. */
   function withGlobalTimeoutConfig(conf: TimeoutConfig): internalClientOption {
     return (client) => client.setGlobalTimeoutConfig(conf);
   }
 
+  /** Creates an option that sets the global reconnect policy. */
   function withGlobalReconnectConfig(
     conf: ReconnectConfig,
   ): internalClientOption {
     return (client) => client.setGlobalReconnectConfig(conf);
   }
 
+  /** Creates an option that sets the global maximum stream message size. */
   function withGlobalMaxMessageSize(size: number): internalClientOption {
     return (client) => client.setGlobalMaxMessageSize(size);
   }
 
+  /**
+   * Fluent builder for constructing an internalClient with layered defaults.
+   */
   class clientBuilder {
     private readonly baseURL: string;
     private readonly procDefs: OperationDefinition[];
     private readonly streamDefs: OperationDefinition[];
     private readonly opts: internalClientOption[] = [];
 
+    /** Creates a new builder bound to the generated operation catalogs. */
     constructor(
       baseURL: string,
       procDefs: OperationDefinition[],
@@ -1353,46 +1395,55 @@ const CLIENT_RUNTIME = dedent(/* ts */ `
       this.streamDefs = streamDefs;
     }
 
+    /** Overrides the fetch implementation used by the internal client. */
     withFetch(fetchFn: FetchLike): clientBuilder {
       this.opts.push(withFetch(fetchFn));
       return this;
     }
 
+    /** Appends one static global header provider. */
     withGlobalHeader(key: string, value: string): clientBuilder {
       this.opts.push(withGlobalHeader(key, value));
       return this;
     }
 
+    /** Appends one dynamic global header provider. */
     withHeaderProvider(provider: HeaderProvider): clientBuilder {
       this.opts.push(withHeaderProvider(provider));
       return this;
     }
 
+    /** Appends one interceptor to the global chain. */
     withInterceptor(interceptor: Interceptor): clientBuilder {
       this.opts.push(withInterceptor(interceptor));
       return this;
     }
 
+    /** Sets the global retry policy default. */
     withGlobalRetryConfig(conf: RetryConfig): clientBuilder {
       this.opts.push(withGlobalRetryConfig(conf));
       return this;
     }
 
+    /** Sets the global timeout policy default. */
     withGlobalTimeoutConfig(conf: TimeoutConfig): clientBuilder {
       this.opts.push(withGlobalTimeoutConfig(conf));
       return this;
     }
 
+    /** Sets the global reconnect policy default. */
     withGlobalReconnectConfig(conf: ReconnectConfig): clientBuilder {
       this.opts.push(withGlobalReconnectConfig(conf));
       return this;
     }
 
+    /** Sets the global maximum stream message size default. */
     withGlobalMaxMessageSize(size: number): clientBuilder {
       this.opts.push(withGlobalMaxMessageSize(size));
       return this;
     }
 
+    /** Builds the final internal client instance. */
     build(): internalClient {
       return new internalClient(
         this.baseURL,

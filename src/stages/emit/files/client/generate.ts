@@ -214,7 +214,7 @@ function renderRPCRegistry(
   writeDocComment(g, {
     fallback: "Registry exposing every generated RPC service.",
   });
-  g.line("export class ClientRPCRegistry {");
+  g.line("class ClientRPCRegistry {");
   g.block(() => {
     g.line("private readonly intClient: internalClient;");
     g.line("constructor(intClient: internalClient) {");
@@ -258,7 +258,7 @@ function renderRPCClientClass(
     annotations: service.annotations,
     fallback: `Client-side access point for the ${service.name} RPC service and its defaults.`,
   });
-  g.line(`export class Client${service.name}RPC {`);
+  g.line(`class Client${service.name}RPC {`);
   g.block(() => {
     g.line("private readonly intClient: internalClient;");
     g.line(`public readonly procs: Client${service.name}Procs;`);
@@ -319,6 +319,9 @@ function renderRPCClientClass(
     g.line("}");
     g.break();
 
+    writeDocComment(g, {
+      fallback: `Sets the exact retry configuration for procedures in ${service.name}.`,
+    });
     g.line(`withRetryConfig(config: RetryConfig): Client${service.name}RPC {`);
     g.block(() => {
       g.line(
@@ -344,6 +347,9 @@ function renderRPCClientClass(
     g.line("}");
     g.break();
 
+    writeDocComment(g, {
+      fallback: `Sets the exact timeout configuration for procedures in ${service.name}.`,
+    });
     g.line(
       `withTimeoutConfig(config: TimeoutConfig): Client${service.name}RPC {`,
     );
@@ -371,6 +377,9 @@ function renderRPCClientClass(
     g.line("}");
     g.break();
 
+    writeDocComment(g, {
+      fallback: `Sets the exact reconnect configuration for streams in ${service.name}.`,
+    });
     g.line(
       `withReconnectConfig(config: ReconnectConfig): Client${service.name}RPC {`,
     );
@@ -409,7 +418,7 @@ function renderRPCProcedureRegistry(
   writeDocComment(g, {
     fallback: `Registry exposing every generated procedure builder for ${service.name}.`,
   });
-  g.line(`export class Client${service.name}Procs {`);
+  g.line(`class Client${service.name}Procs {`);
   g.block(() => {
     g.line("private readonly intClient: internalClient;");
     g.line("constructor(intClient: internalClient) {");
@@ -445,7 +454,7 @@ function renderRPCStreamRegistry(
   writeDocComment(g, {
     fallback: `Registry exposing every generated stream builder for ${service.name}.`,
   });
-  g.line(`export class Client${service.name}Streams {`);
+  g.line(`class Client${service.name}Streams {`);
   g.block(() => {
     g.line("private readonly intClient: internalClient;");
     g.line("constructor(intClient: internalClient) {");
@@ -645,6 +654,10 @@ function renderProcedureBuilder(
     g.line("}");
     g.break();
 
+    writeDocComment(g, {
+      fallback:
+        "Sets the exact retry configuration for this procedure call, including max attempts.",
+    });
     g.line(
       `withRetryConfig(config: RetryConfig): Proc${operation.rpcName}${operation.name}Builder {`,
     );
@@ -670,6 +683,9 @@ function renderProcedureBuilder(
     g.line("}");
     g.break();
 
+    writeDocComment(g, {
+      fallback: "Sets the exact timeout configuration for this procedure call.",
+    });
     g.line(
       `withTimeoutConfig(config: TimeoutConfig): Proc${operation.rpcName}${operation.name}Builder {`,
     );
@@ -743,6 +759,11 @@ function renderStreamBuilder(
     ? `execute(input: ${inputType})`
     : `execute(input: Void = {})`;
 
+  writeDocComment(g, {
+    doc: operation.doc,
+    annotations: operation.annotations,
+    fallback: `Typed stream event envelope yielded by ${operation.rpcName}.${operation.name}.`,
+  });
   g.line(`export type ${responseType} = Response<${outputType}>;`);
   g.break();
 
@@ -816,6 +837,10 @@ function renderStreamBuilder(
     g.line("}");
     g.break();
 
+    writeDocComment(g, {
+      fallback:
+        "Sets the exact reconnect configuration for this stream, including max attempts.",
+    });
     g.line(
       `withReconnectConfig(config: ReconnectConfig): Stream${operation.rpcName}${operation.name}Builder {`,
     );
@@ -854,6 +879,9 @@ function renderStreamBuilder(
     g.line("}");
     g.break();
 
+    writeDocComment(g, {
+      fallback: "Alias of onConnect for compatibility with previous APIs.",
+    });
     g.line(
       `withOnConnect(cb: () => void): Stream${operation.rpcName}${operation.name}Builder { return this.onConnect(cb); }`,
     );
@@ -873,6 +901,9 @@ function renderStreamBuilder(
     g.line("}");
     g.break();
 
+    writeDocComment(g, {
+      fallback: "Alias of onDisconnect for compatibility with previous APIs.",
+    });
     g.line(
       `withOnDisconnect(cb: (error: Error | null) => void): Stream${operation.rpcName}${operation.name}Builder { return this.onDisconnect(cb); }`,
     );
@@ -891,6 +922,9 @@ function renderStreamBuilder(
     g.line("}");
     g.break();
 
+    writeDocComment(g, {
+      fallback: "Alias of onReconnect for compatibility with previous APIs.",
+    });
     g.line(
       `withOnReconnect(cb: (attempt: number, delayMs: number) => void): Stream${operation.rpcName}${operation.name}Builder { return this.onReconnect(cb); }`,
     );

@@ -85,18 +85,22 @@ const SERVER_RUNTIME = dedent(/* ts */ `
       this.operation = operation;
     }
 
+    /** RPC service name resolved from the current operation. */
     get rpcName(): string {
       return this.operation.rpcName;
     }
 
+    /** Operation name resolved from the current operation. */
     get operationName(): string {
       return this.operation.name;
     }
 
+    /** Operation kind (procedure or stream). */
     get operationType(): OperationDefinition["type"] {
       return this.operation.type;
     }
 
+    /** Schema annotations preserved for this operation. */
     get annotations(): OperationAnnotation[] {
       return this.operation.annotations;
     }
@@ -184,7 +188,7 @@ const SERVER_RUNTIME = dedent(/* ts */ `
   /**
    * Internal function used to deserialize raw JSON input into typed objects.
    */
-  export type DeserializerFunc = (raw: unknown) => Promise<unknown>;
+  type DeserializerFunc = (raw: unknown) => Promise<unknown>;
 
   /**
    * Custom error handler used to transform arbitrary failures into VdlError responses.
@@ -218,7 +222,7 @@ const SERVER_RUNTIME = dedent(/* ts */ `
    *
    * @typeParam T - The application context type (props) containing dependencies.
    */
-  export class InternalServer<T> {
+  class InternalServer<T> {
     private readonly operationDefs: Map<string, Map<string, OperationDefinition>>;
     private readonly procHandlers: Map<string, Map<string, ProcHandlerFunc<T, any, any>>>;
     private readonly streamHandlers: Map<string, Map<string, StreamHandlerFunc<T, any, any>>>;
@@ -534,6 +538,7 @@ const SERVER_RUNTIME = dedent(/* ts */ `
         closed = true;
       });
 
+      /** Writes to the adapter only while the connection remains open. */
       const safeWrite = (data: string) => {
         if (closed || c.signal.aborted) {
           return;
@@ -542,6 +547,7 @@ const SERVER_RUNTIME = dedent(/* ts */ `
         adapter.flush?.();
       };
 
+      /** Resolves ping interval precedence: global -> RPC -> stream. */
       let pingInterval = this.globalStreamConfig.pingIntervalMs || 30000;
       const rpcConfig = this.rpcStreamConfigs.get(rpcName);
       if (rpcConfig?.pingIntervalMs) {
@@ -555,6 +561,7 @@ const SERVER_RUNTIME = dedent(/* ts */ `
         pingInterval = 30000;
       }
 
+      /** Emits SSE heartbeat comments to keep intermediaries from timing out idle streams. */
       const pingTimer = setInterval(() => {
         if (closed || c.signal.aborted) {
           clearInterval(pingTimer);
@@ -564,22 +571,26 @@ const SERVER_RUNTIME = dedent(/* ts */ `
         safeWrite(": ping\\n\\n");
       }, pingInterval);
 
+      /** Ensures timers are cleared and the adapter is always closed exactly once. */
       const cleanup = () => {
         clearInterval(pingTimer);
         closed = true;
         adapter.end();
       };
 
+      /** Base emit function that serializes typed events into SSE data frames. */
       const baseEmit: EmitFunc<T, any, unknown> = async (_ctx, output) => {
         safeWrite("data: " + JSON.stringify({ ok: true, output }) + "\\n\\n");
       };
 
+      /** Composed emit function after applying stream-level emit middleware. */
       let emitFinal = baseEmit;
       const emitMws = this.streamEmitMiddlewares.get(rpcName)?.get(streamName) ?? [];
       for (let index = emitMws.length - 1; index >= 0; index -= 1) {
         emitFinal = emitMws[index](emitFinal);
       }
 
+      /** Composed request handler after applying stream, RPC, and global middleware. */
       let next: GlobalHandlerFunc<T> = (ctx) =>
         baseHandler(ctx as HandlerContext<T, any>, emitFinal) as Promise<unknown>;
 

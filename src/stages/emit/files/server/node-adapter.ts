@@ -185,7 +185,7 @@ const NODE_ADAPTER = dedent(/* ts */ `
    * @param prefix - Optional path prefix to strip (e.g., "/rpc")
    * @returns Object with rpcName and operationName, or null if parsing fails
    */
-  export function parseNodeRpcPath(
+  function parseNodeRpcPath(
     url: string,
     prefix?: string,
   ): { rpcName: string; operationName: string } | null {
@@ -212,16 +212,16 @@ const NODE_ADAPTER = dedent(/* ts */ `
     return { rpcName, operationName };
   }
 
-/**
- * Options for createNodeHandler.
- */
-export interface NodeHandlerOptions {
   /**
-   * URL path prefix to strip before parsing RPC/operation names.
-   * Example: "/rpc" or "/api/v1"
+   * Options for createNodeHandler.
    */
-  prefix?: string;
-}
+  export interface NodeHandlerOptions {
+    /**
+     * URL path prefix to strip before parsing RPC/operation names.
+     * Example: "/rpc" or "/api/v1"
+     */
+    prefix?: string;
+  }
 
   /**
    * Creates a Node.js HTTP request handler for a VDL Server.

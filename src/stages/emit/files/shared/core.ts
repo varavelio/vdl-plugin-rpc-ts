@@ -223,7 +223,7 @@ const CORE_RUNTIME = dedent(/* ts */ `
   /**
    * Convenience helper for missing-field validation errors.
    */
-  export function errorMissingRequiredField(message: string): VdlError {
+  function errorMissingRequiredField(message: string): VdlError {
     return new VdlError({
       message,
       category: "ValidationError",
@@ -234,7 +234,7 @@ const CORE_RUNTIME = dedent(/* ts */ `
   /**
    * Sleeps for the given number of milliseconds.
    */
-  export function sleep(ms: number): Promise<void> {
+  function sleep(ms: number): Promise<void> {
     return new Promise((resolve) => setTimeout(resolve, ms));
   }
 `);

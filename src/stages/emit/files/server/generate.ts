@@ -121,7 +121,7 @@ function renderServerFacade(
   writeDocComment(g, {
     fallback: "Top-level registry exposing every generated RPC service.",
   });
-  g.line("export class ServerRPCRegistry<T> {");
+  g.line("class ServerRPCRegistry<T> {");
   g.block(() => {
     g.line("private readonly intServer: InternalServer<T>;");
     g.line("constructor(intServer: InternalServer<T>) {");
@@ -183,7 +183,7 @@ function renderServiceClass(
     annotations: service.annotations,
     fallback: `Typed registration surface for the ${service.name} RPC service.`,
   });
-  g.line(`export class Server${service.name}RPC<T> {`);
+  g.line(`class Server${service.name}RPC<T> {`);
   g.block(() => {
     g.line("private readonly intServer: InternalServer<T>;");
     g.line(`public readonly procs: Server${service.name}Procs<T>;`);
@@ -248,7 +248,7 @@ function renderProcedureRegistry(
   writeDocComment(g, {
     fallback: `Registry exposing every generated procedure entry for ${service.name}.`,
   });
-  g.line(`export class Server${service.name}Procs<T> {`);
+  g.line(`class Server${service.name}Procs<T> {`);
   g.block(() => {
     g.line("private readonly intServer: InternalServer<T>;");
     g.line(
@@ -282,7 +282,7 @@ function renderStreamRegistry(
   writeDocComment(g, {
     fallback: `Registry exposing every generated stream entry for ${service.name}.`,
   });
-  g.line(`export class Server${service.name}Streams<T> {`);
+  g.line(`class Server${service.name}Streams<T> {`);
   g.block(() => {
     g.line("private readonly intServer: InternalServer<T>;");
     g.line(
@@ -317,7 +317,12 @@ function renderProcedureEntry(
   const outputType = renderRuntimeTypeReference(operation.outputTypeName);
   const inputHelper = renderRuntimeHelperReference(operation.inputTypeName);
 
-  g.line(`export class Proc${operation.rpcName}${operation.name}Entry<T> {`);
+  writeDocComment(g, {
+    doc: operation.doc,
+    annotations: operation.annotations,
+    fallback: `Typed procedure registration entry for ${operation.rpcName}.${operation.name}.`,
+  });
+  g.line(`class Proc${operation.rpcName}${operation.name}Entry<T> {`);
   g.block(() => {
     g.line("private readonly intServer: InternalServer<T>;");
     g.line(
@@ -417,7 +422,12 @@ function renderStreamEntry(
   const outputType = renderRuntimeTypeReference(operation.outputTypeName);
   const inputHelper = renderRuntimeHelperReference(operation.inputTypeName);
 
-  g.line(`export class Stream${operation.rpcName}${operation.name}Entry<T> {`);
+  writeDocComment(g, {
+    doc: operation.doc,
+    annotations: operation.annotations,
+    fallback: `Typed stream registration entry for ${operation.rpcName}.${operation.name}.`,
+  });
+  g.line(`class Stream${operation.rpcName}${operation.name}Entry<T> {`);
   g.block(() => {
     g.line("private readonly intServer: InternalServer<T>;");
     g.line(
