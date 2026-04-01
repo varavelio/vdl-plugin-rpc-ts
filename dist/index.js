@@ -2455,12 +2455,14 @@ function renderClientFacade(g, context) {
   g.line("export class Client {");
   g.block(() => {
     g.line("private readonly intClient: internalClient;");
+    g.line("public readonly rpcs: ClientRPCRegistry;");
     g.line("public readonly procs: ProcRegistry;");
     g.line("public readonly streams: StreamRegistry;");
     g.break();
     g.line("constructor(intClient: internalClient) {");
     g.block(() => {
       g.line("this.intClient = intClient;");
+      g.line("this.rpcs = new ClientRPCRegistry(intClient);");
       g.line("this.procs = new ProcRegistry(intClient);");
       g.line("this.streams = new StreamRegistry(intClient);");
     });
@@ -2468,10 +2470,240 @@ function renderClientFacade(g, context) {
   });
   g.line("}");
   g.break();
+  renderRPCRegistry(g, context);
   renderProcedureRegistry(g, context);
   renderStreamRegistry(g, context);
 }
 __name(renderClientFacade, "renderClientFacade");
+function renderRPCRegistry(g, context) {
+  writeDocComment(g, {
+    fallback: "Registry exposing every generated RPC service."
+  });
+  g.line("export class ClientRPCRegistry {");
+  g.block(() => {
+    g.line("private readonly intClient: internalClient;");
+    g.line("constructor(intClient: internalClient) {");
+    g.block(() => {
+      g.line("this.intClient = intClient;");
+    });
+    g.line("}");
+    g.break();
+    for (const service of context.services) {
+      writeDocComment(g, {
+        doc: service.doc,
+        annotations: service.annotations,
+        fallback: `Access the ${service.name} RPC service.`
+      });
+      g.line(
+        `${service.accessorName}(): Client${service.name}RPC { return new Client${service.name}RPC(this.intClient); }`
+      );
+      g.break();
+    }
+  });
+  g.line("}");
+  g.break();
+  for (const service of context.services) {
+    renderRPCClientClass(g, service);
+    renderRPCProcedureRegistry(g, service);
+    renderRPCStreamRegistry(g, service);
+  }
+}
+__name(renderRPCRegistry, "renderRPCRegistry");
+function renderRPCClientClass(g, service) {
+  writeDocComment(g, {
+    doc: service.doc,
+    annotations: service.annotations,
+    fallback: `Client-side access point for the ${service.name} RPC service and its defaults.`
+  });
+  g.line(`export class Client${service.name}RPC {`);
+  g.block(() => {
+    g.line("private readonly intClient: internalClient;");
+    g.line(`public readonly procs: Client${service.name}Procs;`);
+    g.line(`public readonly streams: Client${service.name}Streams;`);
+    g.break();
+    g.line("constructor(intClient: internalClient) {");
+    g.block(() => {
+      g.line("this.intClient = intClient;");
+      g.line(`this.procs = new Client${service.name}Procs(intClient);`);
+      g.line(`this.streams = new Client${service.name}Streams(intClient);`);
+    });
+    g.line("}");
+    g.break();
+    writeDocComment(g, {
+      fallback: `Adds a static default header for every ${service.name} request.`
+    });
+    g.line(
+      `withHeader(key: string, value: string): Client${service.name}RPC {`
+    );
+    g.block(() => {
+      g.line(
+        `this.intClient.setRPCHeaderProvider(${JSON.stringify(service.name)}, (headers) => { headers[key] = value; });`
+      );
+      g.line("return this;");
+    });
+    g.line("}");
+    g.break();
+    writeDocComment(g, {
+      fallback: `Adds a dynamic default header provider for every ${service.name} request.`
+    });
+    g.line(
+      `withHeaderProvider(provider: HeaderProvider): Client${service.name}RPC {`
+    );
+    g.block(() => {
+      g.line(
+        `this.intClient.setRPCHeaderProvider(${JSON.stringify(service.name)}, provider);`
+      );
+      g.line("return this;");
+    });
+    g.line("}");
+    g.break();
+    writeDocComment(g, {
+      fallback: `Sets the default retry policy for procedures in ${service.name}.`
+    });
+    g.line(
+      `withRetries(config: Partial<RetryConfig>): Client${service.name}RPC {`
+    );
+    g.block(() => {
+      g.line(
+        `this.intClient.setRPCRetryConfig(${JSON.stringify(service.name)}, normalizeRetryConfig(config, 3));`
+      );
+      g.line("return this;");
+    });
+    g.line("}");
+    g.break();
+    g.line(`withRetryConfig(config: RetryConfig): Client${service.name}RPC {`);
+    g.block(() => {
+      g.line(
+        `this.intClient.setRPCRetryConfig(${JSON.stringify(service.name)}, normalizeRetryConfig(config, config.maxAttempts));`
+      );
+      g.line("return this;");
+    });
+    g.line("}");
+    g.break();
+    writeDocComment(g, {
+      fallback: `Sets the default timeout policy for procedures in ${service.name}.`
+    });
+    g.line(
+      `withTimeout(config: Partial<TimeoutConfig>): Client${service.name}RPC {`
+    );
+    g.block(() => {
+      g.line(
+        `this.intClient.setRPCTimeoutConfig(${JSON.stringify(service.name)}, normalizeTimeoutConfig(config));`
+      );
+      g.line("return this;");
+    });
+    g.line("}");
+    g.break();
+    g.line(
+      `withTimeoutConfig(config: TimeoutConfig): Client${service.name}RPC {`
+    );
+    g.block(() => {
+      g.line(
+        `this.intClient.setRPCTimeoutConfig(${JSON.stringify(service.name)}, normalizeTimeoutConfig(config));`
+      );
+      g.line("return this;");
+    });
+    g.line("}");
+    g.break();
+    writeDocComment(g, {
+      fallback: `Sets the default reconnect policy for streams in ${service.name}.`
+    });
+    g.line(
+      `withReconnect(config: Partial<ReconnectConfig>): Client${service.name}RPC {`
+    );
+    g.block(() => {
+      g.line(
+        `this.intClient.setRPCReconnectConfig(${JSON.stringify(service.name)}, normalizeReconnectConfig(config, 5));`
+      );
+      g.line("return this;");
+    });
+    g.line("}");
+    g.break();
+    g.line(
+      `withReconnectConfig(config: ReconnectConfig): Client${service.name}RPC {`
+    );
+    g.block(() => {
+      g.line(
+        `this.intClient.setRPCReconnectConfig(${JSON.stringify(service.name)}, normalizeReconnectConfig(config, config.maxAttempts));`
+      );
+      g.line("return this;");
+    });
+    g.line("}");
+    g.break();
+    writeDocComment(g, {
+      fallback: `Sets the default maximum stream message size for ${service.name}.`
+    });
+    g.line(`withMaxMessageSize(size: number): Client${service.name}RPC {`);
+    g.block(() => {
+      g.line(
+        `this.intClient.setRPCMaxMessageSize(${JSON.stringify(service.name)}, size);`
+      );
+      g.line("return this;");
+    });
+    g.line("}");
+  });
+  g.line("}");
+  g.break();
+}
+__name(renderRPCClientClass, "renderRPCClientClass");
+function renderRPCProcedureRegistry(g, service) {
+  writeDocComment(g, {
+    fallback: `Registry exposing every generated procedure builder for ${service.name}.`
+  });
+  g.line(`export class Client${service.name}Procs {`);
+  g.block(() => {
+    g.line("private readonly intClient: internalClient;");
+    g.line("constructor(intClient: internalClient) {");
+    g.block(() => {
+      g.line("this.intClient = intClient;");
+    });
+    g.line("}");
+    g.break();
+    for (const procedure of service.procedures) {
+      writeDocComment(g, {
+        doc: procedure.doc,
+        annotations: procedure.annotations,
+        fallback: `Creates a call builder for ${service.name}.${procedure.name}.`
+      });
+      g.line(
+        `${procedure.serverMethodName}(): Proc${procedure.rpcName}${procedure.name}Builder { return new Proc${procedure.rpcName}${procedure.name}Builder(this.intClient, ${JSON.stringify(procedure.rpcName)}, ${JSON.stringify(procedure.name)}); }`
+      );
+      g.break();
+    }
+  });
+  g.line("}");
+  g.break();
+}
+__name(renderRPCProcedureRegistry, "renderRPCProcedureRegistry");
+function renderRPCStreamRegistry(g, service) {
+  writeDocComment(g, {
+    fallback: `Registry exposing every generated stream builder for ${service.name}.`
+  });
+  g.line(`export class Client${service.name}Streams {`);
+  g.block(() => {
+    g.line("private readonly intClient: internalClient;");
+    g.line("constructor(intClient: internalClient) {");
+    g.block(() => {
+      g.line("this.intClient = intClient;");
+    });
+    g.line("}");
+    g.break();
+    for (const stream of service.streams) {
+      writeDocComment(g, {
+        doc: stream.doc,
+        annotations: stream.annotations,
+        fallback: `Creates a stream builder for ${service.name}.${stream.name}.`
+      });
+      g.line(
+        `${stream.serverMethodName}(): Stream${stream.rpcName}${stream.name}Builder { return new Stream${stream.rpcName}${stream.name}Builder(this.intClient, ${JSON.stringify(stream.rpcName)}, ${JSON.stringify(stream.name)}); }`
+      );
+      g.break();
+    }
+  });
+  g.line("}");
+  g.break();
+}
+__name(renderRPCStreamRegistry, "renderRPCStreamRegistry");
 function renderProcedureRegistry(g, context) {
   writeDocComment(g, {
     fallback: "Registry exposing every generated procedure builder."
