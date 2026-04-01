@@ -288,7 +288,7 @@ const CLIENT_RUNTIME = dedent(/* ts */ `
      * Structure: rpcName → operationName → OperationType
      * Used to validate requests and fail fast on typos.
      */
-    private operationDefs: Map<string, Map<string, OperationType>>;
+    private operationDefs: Map<string, Map<string, OperationDefinition>>;
 
     // ---------------------------------------------------------------------------
     // Dynamic Components
