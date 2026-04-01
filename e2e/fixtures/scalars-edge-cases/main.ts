@@ -120,7 +120,7 @@ async function testZeroValuesClient(client: Client) {
   // Zero datetime - epoch time
   const zeroTime = new Date(0);
 
-  const result = await client.procs.serviceEcho().execute({
+  const result = await client.rpcs.service().procs.echo().execute({
     intVal: 0,
     floatVal: 0.0,
     boolVal: false,
@@ -153,7 +153,7 @@ async function testNonZeroValues(client: Client) {
   const now = new Date();
   now.setMilliseconds(0); // Truncate to seconds like Go does
 
-  const result = await client.procs.serviceEcho().execute({
+  const result = await client.rpcs.service().procs.echo().execute({
     intVal: 42,
     floatVal: Math.PI,
     boolVal: true,

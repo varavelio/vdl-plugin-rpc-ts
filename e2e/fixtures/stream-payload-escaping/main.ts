@@ -52,7 +52,7 @@ async function main() {
   const client = NewClient(baseUrl).build();
 
   try {
-    const { stream } = client.streams.serviceEvents().execute({});
+    const { stream } = client.rpcs.service().streams.events().execute({});
 
     const received: string[] = [];
     for await (const event of stream) {

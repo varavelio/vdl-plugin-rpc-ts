@@ -42,17 +42,16 @@ async function main() {
   const port = addr.port;
   const baseUrl = `http://localhost:${port}/rpc`;
 
-  // Create client with global header (Authorization)
-  const client = NewClient(baseUrl)
-    .withGlobalHeader("Authorization", "Bearer secret")
-    .build();
+  const client = NewClient(baseUrl).build();
+  client.rpcs
+    .service()
+    .withHeader("Authorization", "Bearer secret")
+    .withHeaderProvider((headers) => {
+      headers["X-Custom"] = "123";
+    });
 
   try {
-    // Execute with request-level header (X-Custom)
-    const result = await client.procs
-      .serviceGetHeaders()
-      .withHeader("X-Custom", "123")
-      .execute({});
+    const result = await client.rpcs.service().procs.getHeaders().execute({});
 
     // Verify both headers were received
     if (result.values.Authorization !== "Bearer secret") {

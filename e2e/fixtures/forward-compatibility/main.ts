@@ -43,7 +43,7 @@ async function main() {
   const client = NewClient(baseUrl).build();
 
   try {
-    const result = await client.procs.serviceGetData().execute({});
+    const result = await client.rpcs.service().procs.getData().execute({});
 
     // Verify the known fields are correctly parsed
     if (result.name !== "test") {

@@ -132,8 +132,9 @@ async function testGeneratedClient() {
   const baseUrl = `http://localhost:${addr.port}/rpc`;
   const client = NewClient(baseUrl).build();
 
-  const { stream } = client.streams
-    .clockTicks()
+  const { stream } = client.rpcs
+    .clock()
+    .streams.ticks()
     .withReconnect({ maxAttempts: 0 })
     .execute({});
 

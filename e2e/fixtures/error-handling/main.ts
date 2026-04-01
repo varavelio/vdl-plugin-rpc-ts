@@ -61,7 +61,7 @@ async function main() {
 
   // Test Users.Get - should use global handler
   try {
-    await client.procs.usersGet().execute({});
+    await client.rpcs.users().procs.get().execute({});
     console.error("Expected error for Users.Get, got success");
     process.exit(1);
   } catch (e) {
@@ -77,7 +77,7 @@ async function main() {
 
   // Test Auth.Login - should use RPC-specific handler
   try {
-    await client.procs.authLogin().execute({});
+    await client.rpcs.auth().procs.login().execute({});
     console.error("Expected error for Auth.Login, got success");
     process.exit(1);
   } catch (e) {

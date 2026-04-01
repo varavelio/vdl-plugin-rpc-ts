@@ -55,7 +55,7 @@ async function main() {
       d: now,
     };
 
-    const response = await client.procs.serviceEcho().execute(input);
+    const response = await client.rpcs.service().procs.echo().execute(input);
 
     if (response.i !== input.i) {
       console.error("int mismatch:", response.i, "!==", input.i);

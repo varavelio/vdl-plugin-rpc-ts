@@ -88,7 +88,7 @@ async function testValidEnumRoundTrip(client: Client) {
   ];
 
   for (const tc of testCases) {
-    const res = await client.procs.serviceEcho().execute({
+    const res = await client.rpcs.service().procs.echo().execute({
       color: tc.color,
       priority: tc.priority,
     });
@@ -104,7 +104,7 @@ async function testValidEnumRoundTrip(client: Client) {
 
 async function testOptionalEnums(client: Client) {
   // Test with absent optional enums
-  const res = await client.procs.serviceEchoOptional().execute({
+  const res = await client.rpcs.service().procs.echoOptional().execute({
     container: {},
   });
 
@@ -116,12 +116,15 @@ async function testOptionalEnums(client: Client) {
   }
 
   // Test with present valid optional enums
-  const res2 = await client.procs.serviceEchoOptional().execute({
-    container: {
-      color: "Blue",
-      priority: 3,
-    },
-  });
+  const res2 = await client.rpcs
+    .service()
+    .procs.echoOptional()
+    .execute({
+      container: {
+        color: "Blue",
+        priority: 3,
+      },
+    });
 
   if (res2.container.color !== "Blue") {
     throw new Error(`expected "Blue", got ${res2.container.color}`);
@@ -131,11 +134,14 @@ async function testOptionalEnums(client: Client) {
   }
 
   // Test optional explicit-value enum
-  const res3 = await client.procs.serviceEchoOptional().execute({
-    container: {
-      logLevel: "WARN",
-    },
-  });
+  const res3 = await client.rpcs
+    .service()
+    .procs.echoOptional()
+    .execute({
+      container: {
+        logLevel: "WARN",
+      },
+    });
 
   if (res3.container.logLevel !== "WARN") {
     throw new Error(`expected "WARN", got ${res3.container.logLevel}`);
@@ -152,7 +158,7 @@ async function testExplicitValueRoundTrip(client: Client) {
   ];
 
   for (const tc of testCases) {
-    const res = await client.procs.serviceEchoLogLevel().execute({
+    const res = await client.rpcs.service().procs.echoLogLevel().execute({
       level: tc.level,
     });
 

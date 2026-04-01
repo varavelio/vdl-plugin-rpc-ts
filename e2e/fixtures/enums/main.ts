@@ -45,8 +45,9 @@ async function main() {
     ];
 
     for (const tc of testCases) {
-      const response = await client.procs
-        .serviceTest()
+      const response = await client.rpcs
+        .service()
+        .procs.test()
         .execute({ c: tc.color, p: tc.priority });
 
       if (response.c !== tc.color) {

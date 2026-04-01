@@ -78,7 +78,10 @@ async function main() {
   const client = NewClient(baseUrl).build();
 
   try {
-    const response = await client.procs.echoSay().execute({ message: "test" });
+    const response = await client.rpcs
+      .echo()
+      .procs.say()
+      .execute({ message: "test" });
 
     if (response.message !== "test") {
       throw new Error(`expected "test", got "${response.message}"`);

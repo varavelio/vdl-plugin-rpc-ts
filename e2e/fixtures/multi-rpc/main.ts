@@ -45,10 +45,10 @@ async function main() {
   const client = NewClient(baseUrl).build();
 
   // Test A.X
-  await client.procs.aX().execute({});
+  await client.rpcs.a().procs.x().execute({});
 
   // Test B.Y
-  await client.procs.bY().execute({});
+  await client.rpcs.b().procs.y().execute({});
 
   console.log("Success");
   httpServer.close();

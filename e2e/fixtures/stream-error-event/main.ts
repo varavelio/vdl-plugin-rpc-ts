@@ -42,8 +42,9 @@ async function main() {
   const client = NewClient(baseUrl).build();
 
   try {
-    const { stream } = client.streams
-      .serviceData()
+    const { stream } = client.rpcs
+      .service()
+      .streams.data()
       .withReconnect({ maxAttempts: 0 })
       .execute({});
 

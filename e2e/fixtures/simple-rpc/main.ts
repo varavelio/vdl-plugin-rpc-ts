@@ -36,8 +36,9 @@ async function main() {
   const client = NewClient(baseUrl).build();
 
   try {
-    const response = await client.procs
-      .greeterHello()
+    const response = await client.rpcs
+      .greeter()
+      .procs.hello()
       .execute({ name: "World" });
     console.log("Response:", response);
 

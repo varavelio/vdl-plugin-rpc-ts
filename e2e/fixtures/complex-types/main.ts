@@ -131,8 +131,9 @@ async function main() {
 
   try {
     const complexInput = buildComplexInput();
-    const response = await client.procs
-      .serviceEcho()
+    const response = await client.rpcs
+      .service()
+      .procs.echo()
       .execute({ data: complexInput });
 
     if (!deepEqual(response.data, complexInput)) {

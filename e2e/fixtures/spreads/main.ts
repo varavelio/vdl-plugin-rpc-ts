@@ -220,7 +220,7 @@ async function testSimpleSpread(client: Client) {
     email: "alice@example.com",
   };
 
-  const res = await client.procs.serviceEchoUser().execute({ user });
+  const res = await client.rpcs.service().procs.echoUser().execute({ user });
 
   if (!deepEqual(res.user, user)) {
     throw new Error(
@@ -239,8 +239,9 @@ async function testMultipleSpreads(client: Client, now: Date) {
     deletedAt: new Date(now.getTime() + 24 * 3600000),
   };
 
-  const res = await client.procs
-    .serviceEchoUserWithTimestamps()
+  const res = await client.rpcs
+    .service()
+    .procs.echoUserWithTimestamps()
     .execute({ user });
 
   if (!deepEqual(res.user, user)) {
@@ -260,7 +261,10 @@ async function testChainedSpreads(client: Client, now: Date) {
     entityId: "doc-789",
   };
 
-  const res = await client.procs.serviceEchoAuditedEntity().execute({ entity });
+  const res = await client.rpcs
+    .service()
+    .procs.echoAuditedEntity()
+    .execute({ entity });
 
   if (!deepEqual(res.entity, entity)) {
     throw new Error(
@@ -290,7 +294,10 @@ async function testSpreadWithNestedObjects(client: Client, now: Date) {
     contact: contact,
   };
 
-  const res = await client.procs.serviceEchoPerson().execute({ person });
+  const res = await client.rpcs
+    .service()
+    .procs.echoPerson()
+    .execute({ person });
 
   if (!deepEqual(res.person, person)) {
     throw new Error(
@@ -314,7 +321,7 @@ async function testSpreadWithArraysAndMaps(client: Client, now: Date) {
     content: "This document describes the system architecture...",
   };
 
-  const res = await client.procs.serviceEchoDocument().execute({ doc });
+  const res = await client.rpcs.service().procs.echoDocument().execute({ doc });
 
   if (!deepEqual(res.doc, doc)) {
     throw new Error(
@@ -333,7 +340,10 @@ async function testDeepChainOfSpreads(client: Client) {
     endpoints: ["https://api.example.com", "https://api-backup.example.com"],
   };
 
-  const res = await client.procs.serviceEchoServiceConfig().execute({ config });
+  const res = await client.rpcs
+    .service()
+    .procs.echoServiceConfig()
+    .execute({ config });
 
   if (!deepEqual(res.config, config)) {
     throw new Error(
@@ -358,7 +368,7 @@ async function testSpreadWithArrayOfObjects(client: Client, now: Date) {
     status: "pending",
   };
 
-  const res = await client.procs.serviceEchoOrder().execute({ order });
+  const res = await client.rpcs.service().procs.echoOrder().execute({ order });
 
   if (!deepEqual(res.order, order)) {
     throw new Error(
@@ -375,7 +385,7 @@ async function testSpreadInInput(client: Client, now: Date) {
     customField: "my-custom-value",
   };
 
-  const res = await client.procs.serviceSpreadInInput().execute(input);
+  const res = await client.rpcs.service().procs.spreadInInput().execute(input);
 
   if (res.id !== input.id) {
     throw new Error(`Id mismatch: got ${res.id}, want ${input.id}`);
@@ -399,7 +409,7 @@ async function testSpreadInOutput(client: Client) {
     name: "test-name",
   };
 
-  const res = await client.procs.serviceSpreadInOutput().execute(input);
+  const res = await client.rpcs.service().procs.spreadInOutput().execute(input);
 
   // Verify spread fields from Identifiable
   if (res.id !== input.id) {
@@ -445,8 +455,9 @@ async function testSpreadInNestedAnonymous(client: Client, now: Date) {
     },
   };
 
-  const res = await client.procs
-    .serviceSpreadInNestedAnonymous()
+  const res = await client.rpcs
+    .service()
+    .procs.spreadInNestedAnonymous()
     .execute(input);
 
   // Verify wrapper.id from Identifiable spread
@@ -490,7 +501,10 @@ async function testDeepNestedSpreads(client: Client, now: Date) {
     },
   };
 
-  const res = await client.procs.serviceDeepNestedSpreads().execute(input);
+  const res = await client.rpcs
+    .service()
+    .procs.deepNestedSpreads()
+    .execute(input);
 
   // Verify level1 (Identifiable spread)
   if (res.level1.id !== input.level1.id) {

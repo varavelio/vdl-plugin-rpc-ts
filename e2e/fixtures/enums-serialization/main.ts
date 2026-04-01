@@ -110,7 +110,7 @@ async function testWireFormat(baseUrl: string) {
 }
 
 async function testGeneratedClient(client: Client) {
-  const result = await client.procs.serviceEcho().execute({
+  const result = await client.rpcs.service().procs.echo().execute({
     color: "Green",
     status: "Completed",
   });
@@ -129,7 +129,7 @@ async function testAllEnumValues(client: Client) {
 
   for (const color of colors) {
     for (const status of statuses) {
-      const result = await client.procs.serviceEcho().execute({
+      const result = await client.rpcs.service().procs.echo().execute({
         color: color,
         status: status,
       });
@@ -192,7 +192,7 @@ async function testExplicitValueClient(client: Client) {
   ];
 
   for (const tc of testCases) {
-    const result = await client.procs.serviceEchoHttpStatus().execute({
+    const result = await client.rpcs.service().procs.echoHttpStatus().execute({
       status: tc.input,
     });
 
@@ -221,7 +221,7 @@ async function testExplicitValueAllMembers(client: Client) {
   ];
 
   for (const status of allStatuses) {
-    const result = await client.procs.serviceEchoHttpStatus().execute({
+    const result = await client.rpcs.service().procs.echoHttpStatus().execute({
       status: status,
     });
 

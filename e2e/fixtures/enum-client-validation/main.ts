@@ -77,14 +77,16 @@ async function main() {
   try {
     // ========== Test 1: Valid enum values should work ==========
     console.log("Test 1: Valid enum values...");
-    const colorRes = await client.procs
-      .serviceEchoColor()
+    const colorRes = await client.rpcs
+      .service()
+      .procs.echoColor()
       .execute({ color: "Red" });
     if (colorRes.color !== "Red")
       throw new Error(`Expected "Red", got ${colorRes.color}`);
 
-    const priorityRes = await client.procs
-      .serviceEchoPriority()
+    const priorityRes = await client.rpcs
+      .service()
+      .procs.echoPriority()
       .execute({ priority: 2 });
     if (priorityRes.priority !== 2)
       throw new Error(`Expected 2, got ${priorityRes.priority}`);
@@ -93,7 +95,10 @@ async function main() {
     // ========== Test 2: Invalid string enum value should be rejected by client ==========
     console.log("Test 2: Client rejects invalid string enum...");
     try {
-      await client.procs.serviceEchoColor().execute({ color: "Purple" as any });
+      await client.rpcs
+        .service()
+        .procs.echoColor()
+        .execute({ color: "Purple" as any });
       throw new Error("Expected client to reject invalid enum");
     } catch (e) {
       assertClientValidationError(e, "Color");
@@ -103,7 +108,10 @@ async function main() {
     // ========== Test 3: Invalid integer enum value should be rejected by client ==========
     console.log("Test 3: Client rejects invalid integer enum...");
     try {
-      await client.procs.serviceEchoPriority().execute({ priority: 99 as any });
+      await client.rpcs
+        .service()
+        .procs.echoPriority()
+        .execute({ priority: 99 as any });
       throw new Error("Expected client to reject invalid enum");
     } catch (e) {
       assertClientValidationError(e, "Priority");
@@ -113,12 +121,15 @@ async function main() {
     // ========== Test 4: Invalid enum in nested type should be rejected by client ==========
     console.log("Test 4: Client rejects invalid enum in nested type...");
     try {
-      await client.procs.serviceEchoSettings().execute({
-        settings: {
-          color: "Yellow" as any, // Invalid!
-          priority: 1,
-        },
-      });
+      await client.rpcs
+        .service()
+        .procs.echoSettings()
+        .execute({
+          settings: {
+            color: "Yellow" as any, // Invalid!
+            priority: 1,
+          },
+        });
       throw new Error("Expected client to reject invalid enum");
     } catch (e) {
       assertClientValidationError(e, "Color");
@@ -127,8 +138,9 @@ async function main() {
 
     // ========== Test 5: Valid optional enums (missing) should work ==========
     console.log("Test 5: Valid optional enums (missing)...");
-    const optRes = await client.procs
-      .serviceEchoOptional()
+    const optRes = await client.rpcs
+      .service()
+      .procs.echoOptional()
       .execute({ settings: {} });
     if (optRes.settings.color !== undefined)
       throw new Error("Expected undefined color");
@@ -137,9 +149,12 @@ async function main() {
     // ========== Test 6: Invalid optional enum should be rejected by client ==========
     console.log("Test 6: Client rejects invalid optional enum...");
     try {
-      await client.procs.serviceEchoOptional().execute({
-        settings: { color: "Orange" as any }, // Invalid!
-      });
+      await client.rpcs
+        .service()
+        .procs.echoOptional()
+        .execute({
+          settings: { color: "Orange" as any }, // Invalid!
+        });
       throw new Error("Expected client to reject invalid enum");
     } catch (e) {
       assertClientValidationError(e, "Color");
@@ -148,12 +163,15 @@ async function main() {
 
     // ========== Test 7: Valid enum arrays should work ==========
     console.log("Test 7: Valid enum arrays...");
-    const paletteRes = await client.procs.serviceEchoPalette().execute({
-      palette: {
-        colors: ["Red", "Green", "Blue"],
-        priorities: [1, 2, 3],
-      },
-    });
+    const paletteRes = await client.rpcs
+      .service()
+      .procs.echoPalette()
+      .execute({
+        palette: {
+          colors: ["Red", "Green", "Blue"],
+          priorities: [1, 2, 3],
+        },
+      });
     if (paletteRes.palette.colors.length !== 3)
       throw new Error("Expected 3 colors");
     console.log("  PASS: Valid enum arrays work");
@@ -161,12 +179,15 @@ async function main() {
     // ========== Test 8: Invalid enum in array should be rejected by client ==========
     console.log("Test 8: Client rejects invalid enum in array...");
     try {
-      await client.procs.serviceEchoPalette().execute({
-        palette: {
-          colors: ["Red", "Magenta" as any, "Blue"], // Invalid!
-          priorities: [1, 2, 3],
-        },
-      });
+      await client.rpcs
+        .service()
+        .procs.echoPalette()
+        .execute({
+          palette: {
+            colors: ["Red", "Magenta" as any, "Blue"], // Invalid!
+            priorities: [1, 2, 3],
+          },
+        });
       throw new Error("Expected client to reject invalid enum");
     } catch (e) {
       assertClientValidationError(e, "Color");
@@ -175,12 +196,15 @@ async function main() {
 
     // ========== Test 9: Valid enum maps should work ==========
     console.log("Test 9: Valid enum maps...");
-    const mapRes = await client.procs.serviceEchoColorMap().execute({
-      colorMap: {
-        colorByName: { primary: "Red", secondary: "Blue" },
-        priorityByTask: { task1: 1, task2: 2 },
-      },
-    });
+    const mapRes = await client.rpcs
+      .service()
+      .procs.echoColorMap()
+      .execute({
+        colorMap: {
+          colorByName: { primary: "Red", secondary: "Blue" },
+          priorityByTask: { task1: 1, task2: 2 },
+        },
+      });
     if (mapRes.colorMap.colorByName.primary !== "Red")
       throw new Error("Expected Red");
     console.log("  PASS: Valid enum maps work");
@@ -188,12 +212,15 @@ async function main() {
     // ========== Test 10: Invalid enum in map should be rejected by client ==========
     console.log("Test 10: Client rejects invalid enum in map...");
     try {
-      await client.procs.serviceEchoColorMap().execute({
-        colorMap: {
-          colorByName: { primary: "Cyan" as any }, // Invalid!
-          priorityByTask: { task1: 1 },
-        },
-      });
+      await client.rpcs
+        .service()
+        .procs.echoColorMap()
+        .execute({
+          colorMap: {
+            colorByName: { primary: "Cyan" as any }, // Invalid!
+            priorityByTask: { task1: 1 },
+          },
+        });
       throw new Error("Expected client to reject invalid enum");
     } catch (e) {
       assertClientValidationError(e, "Color");
@@ -203,14 +230,17 @@ async function main() {
     // ========== Test 11: Deeply nested invalid enum should be rejected by client ==========
     console.log("Test 11: Client rejects deeply nested invalid enum...");
     try {
-      await client.procs.serviceEchoNested().execute({
-        nested: {
-          settings: {
-            color: "Red",
-            priority: 999 as any, // Invalid!
+      await client.rpcs
+        .service()
+        .procs.echoNested()
+        .execute({
+          nested: {
+            settings: {
+              color: "Red",
+              priority: 999 as any, // Invalid!
+            },
           },
-        },
-      });
+        });
       throw new Error("Expected client to reject invalid enum");
     } catch (e) {
       assertClientValidationError(e, "Priority");
@@ -220,7 +250,10 @@ async function main() {
     // ========== Test 12: Invalid enum in stream should be rejected by client ==========
     console.log("Test 12: Client rejects invalid enum in stream...");
     try {
-      client.streams.serviceColorStream().execute({ color: "Pink" as any });
+      client.rpcs
+        .service()
+        .streams.colorStream()
+        .execute({ color: "Pink" as any });
       throw new Error("Expected client to reject invalid enum");
     } catch (e) {
       assertClientValidationError(e, "Color");

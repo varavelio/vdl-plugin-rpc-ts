@@ -46,7 +46,7 @@ async function main() {
   const client = NewClient(baseUrl).build();
 
   // Test 1: All optional fields absent (only required)
-  const result1 = await client.procs.serviceEcho().execute({
+  const result1 = await client.rpcs.service().procs.echo().execute({
     required: "hello",
   });
   if (result1.required !== "hello") {
@@ -62,14 +62,17 @@ async function main() {
   }
 
   // Test 2: All optional fields present with values
-  const result2 = await client.procs.serviceEcho().execute({
-    required: "test",
-    optional: "value",
-    optionalInt: 42,
-    optionalBool: true,
-    optionalArray: ["a", "b", "c"],
-    optionalObject: { street: "123 Main", city: "NYC" },
-  });
+  const result2 = await client.rpcs
+    .service()
+    .procs.echo()
+    .execute({
+      required: "test",
+      optional: "value",
+      optionalInt: 42,
+      optionalBool: true,
+      optionalArray: ["a", "b", "c"],
+      optionalObject: { street: "123 Main", city: "NYC" },
+    });
   if (result2.optional !== "value") {
     throw new Error(`Expected optional='value', got '${result2.optional}'`);
   }
@@ -96,7 +99,7 @@ async function main() {
   }
 
   // Test 3: Optional fields with "zero" values (empty string, 0, false)
-  const result3 = await client.procs.serviceEcho().execute({
+  const result3 = await client.rpcs.service().procs.echo().execute({
     required: "test",
     optional: "",
     optionalInt: 0,
@@ -115,7 +118,7 @@ async function main() {
   }
 
   // Test 4: Mixed - some optional present, some absent
-  const result4 = await client.procs.serviceEcho().execute({
+  const result4 = await client.rpcs.service().procs.echo().execute({
     required: "mixed",
     optional: "present",
     // optionalInt is absent

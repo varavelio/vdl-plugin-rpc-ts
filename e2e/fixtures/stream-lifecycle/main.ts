@@ -41,7 +41,10 @@ async function main() {
   const client = NewClient(baseUrl).build();
 
   try {
-    const { stream } = client.streams.streamerCounter().execute({ count: 5 });
+    const { stream } = client.rpcs
+      .streamer()
+      .streams.counter()
+      .execute({ count: 5 });
     let received = 0;
     for await (const event of stream) {
       if (event.ok) {

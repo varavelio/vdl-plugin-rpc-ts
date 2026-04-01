@@ -100,7 +100,7 @@ async function main() {
     {
       name: "ServiceA.Proc1 (Global + RpcA + ProcA1)",
       call: async () => {
-        const res = await client.procs.serviceAProc1().execute({});
+        const res = await client.rpcs.serviceA().procs.proc1().execute({});
         return res.trace;
       },
       expected: ["Global", "RpcA", "ProcA1", "HandlerA1"],
@@ -108,7 +108,7 @@ async function main() {
     {
       name: "ServiceA.Proc2 (Global + RpcA, no proc middleware)",
       call: async () => {
-        const res = await client.procs.serviceAProc2().execute({});
+        const res = await client.rpcs.serviceA().procs.proc2().execute({});
         return res.trace;
       },
       expected: ["Global", "RpcA", "HandlerA2"],
@@ -116,7 +116,7 @@ async function main() {
     {
       name: "ServiceB.Proc1 (Global + RpcB, no proc middleware)",
       call: async () => {
-        const res = await client.procs.serviceBProc1().execute({});
+        const res = await client.rpcs.serviceB().procs.proc1().execute({});
         return res.trace;
       },
       expected: ["Global", "RpcB", "HandlerB1"],

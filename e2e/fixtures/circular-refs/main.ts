@@ -86,11 +86,14 @@ async function main() {
       },
     };
 
-    const response = await client.procs.testServiceTestCircular().execute({
-      self: selfRef,
-      chain,
-      optional,
-    });
+    const response = await client.rpcs
+      .testService()
+      .procs.testCircular()
+      .execute({
+        self: selfRef,
+        chain,
+        optional,
+      });
 
     if (JSON.stringify(response.self) !== JSON.stringify(selfRef)) {
       console.error("Self-referencing data mismatch");

@@ -67,8 +67,9 @@ async function main() {
   try {
     // Test 1: Simple greeting
     console.log("Test 1: Greeter.Hello");
-    const greetResult = await client.procs
-      .greeterHello()
+    const greetResult = await client.rpcs
+      .greeter()
+      .procs.hello()
       .execute({ name: "World" });
     if (greetResult.greeting !== "Hello, World!") {
       console.error(
@@ -81,8 +82,9 @@ async function main() {
 
     // Test 2: Echo
     console.log("Test 2: Greeter.Echo");
-    const echoResult = await client.procs
-      .greeterEcho()
+    const echoResult = await client.rpcs
+      .greeter()
+      .procs.echo()
       .execute({ message: "Test message" });
     if (echoResult.message !== "Test message") {
       console.error(
@@ -95,8 +97,9 @@ async function main() {
 
     // Test 3: Calculator.Add
     console.log("Test 3: Calculator.Add");
-    const addResult = await client.procs
-      .calculatorAdd()
+    const addResult = await client.rpcs
+      .calculator()
+      .procs.add()
       .execute({ a: 5, b: 3 });
     if (addResult.result !== 8) {
       console.error("Test 3 FAILED: Expected 8 but got:", addResult.result);
@@ -165,8 +168,9 @@ async function main() {
   const client2 = NewClient(baseUrl2).build();
 
   try {
-    const result = await client2.procs
-      .greeterHello()
+    const result = await client2.rpcs
+      .greeter()
+      .procs.hello()
       .execute({ name: "PreParsed" });
     if (result.greeting !== "Hello, PreParsed!") {
       console.error(

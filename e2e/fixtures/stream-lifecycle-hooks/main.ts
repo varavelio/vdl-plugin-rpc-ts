@@ -49,8 +49,9 @@ async function main() {
 
   try {
     // Test 1: onConnect and onDisconnect hooks
-    const { stream } = client.streams
-      .eventsWatch()
+    const { stream } = client.rpcs
+      .events()
+      .streams.watch()
       .onConnect(() => {
         console.log("onConnect called");
         connectCalled = true;
@@ -96,8 +97,9 @@ async function main() {
 
     // Test 2: onDisconnect with cancel()
     let cancelDisconnectCalled = false;
-    const { stream: stream2, cancel } = client.streams
-      .eventsWatch()
+    const { stream: stream2, cancel } = client.rpcs
+      .events()
+      .streams.watch()
       .onDisconnect(() => {
         cancelDisconnectCalled = true;
       })
@@ -153,19 +155,20 @@ async function main() {
     const flakyAddr = flakyServer.address() as any;
     const flakyBaseUrl = `http://localhost:${flakyAddr.port}/rpc`;
     const flakyClient = NewClient(flakyBaseUrl).build();
+    flakyClient.rpcs.events().withReconnect({
+      maxAttempts: 5,
+      initialDelayMs: 50,
+      maxDelayMs: 200,
+      delayMultiplier: 1.5,
+    });
 
     let reconnectCalled = false;
     let reconnectAttempt = 0;
     let reconnectDelayMs = 0;
 
-    const { stream: stream3 } = flakyClient.streams
-      .eventsWatch()
-      .withReconnect({
-        maxAttempts: 5,
-        initialDelayMs: 50,
-        maxDelayMs: 200,
-        delayMultiplier: 1.5,
-      })
+    const { stream: stream3 } = flakyClient.rpcs
+      .events()
+      .streams.watch()
       .onReconnect((attempt, delayMs) => {
         console.log(
           `onReconnect called: attempt=${attempt}, delayMs=${delayMs}`,

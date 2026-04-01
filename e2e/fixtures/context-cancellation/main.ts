@@ -57,8 +57,9 @@ async function main() {
   // Create an AbortController to cancel the stream
   const abortController = new AbortController();
 
-  const { stream } = client.streams
-    .serviceCounter()
+  const { stream } = client.rpcs
+    .service()
+    .streams.counter()
     .withReconnect({ maxAttempts: 0 }) // Disable reconnection
     .withSignal(abortController.signal)
     .execute({});

@@ -44,19 +44,16 @@ async function main() {
   const baseUrl = `http://localhost:${port}/rpc`;
 
   const client = NewClient(baseUrl).build();
+  client.rpcs.service().withRetries({
+    maxAttempts: 3,
+    initialDelayMs: 10,
+    maxDelayMs: 100,
+    delayMultiplier: 1.0,
+    jitter: 0,
+  });
 
   try {
-    // Configure retries: 3 attempts with minimal delays
-    await client.procs
-      .serviceFlaky()
-      .withRetries({
-        maxAttempts: 3,
-        initialDelayMs: 10,
-        maxDelayMs: 100,
-        delayMultiplier: 1.0,
-        jitter: 0,
-      })
-      .execute({});
+    await client.rpcs.service().procs.flaky().execute({});
 
     // Verify we made 3 attempts
     if (attempts !== 3) {

@@ -80,20 +80,23 @@ async function main() {
   try {
     // ========== Test 1: Valid enum values should work ==========
     console.log("Test 1: Valid enum values...");
-    const colorRes = await client.procs
-      .serviceEchoColor()
+    const colorRes = await client.rpcs
+      .service()
+      .procs.echoColor()
       .execute({ color: "Red" });
     if (colorRes.color !== "Red")
       throw new Error(`Expected "Red", got ${colorRes.color}`);
 
-    const priorityRes = await client.procs
-      .serviceEchoPriority()
+    const priorityRes = await client.rpcs
+      .service()
+      .procs.echoPriority()
       .execute({ priority: 2 });
     if (priorityRes.priority !== 2)
       throw new Error(`Expected 2, got ${priorityRes.priority}`);
 
-    const logLevelRes = await client.procs
-      .serviceEchoLogLevel()
+    const logLevelRes = await client.rpcs
+      .service()
+      .procs.echoLogLevel()
       .execute({ level: "DEBUG" });
     if (logLevelRes.level !== "DEBUG")
       throw new Error(`Expected "DEBUG", got ${logLevelRes.level}`);
@@ -147,8 +150,9 @@ async function main() {
 
     // ========== Test 6: Valid optional enums (missing) should work ==========
     console.log("Test 6: Valid optional enums (missing)...");
-    const optRes = await client.procs
-      .serviceEchoOptional()
+    const optRes = await client.rpcs
+      .service()
+      .procs.echoOptional()
       .execute({ settings: {} });
     if (optRes.settings.color !== undefined)
       throw new Error("Expected undefined color");
@@ -166,12 +170,15 @@ async function main() {
 
     // ========== Test 8: Valid enum arrays should work ==========
     console.log("Test 8: Valid enum arrays...");
-    const paletteRes = await client.procs.serviceEchoPalette().execute({
-      palette: {
-        colors: ["Red", "Green", "Blue"],
-        priorities: [1, 2, 3],
-      },
-    });
+    const paletteRes = await client.rpcs
+      .service()
+      .procs.echoPalette()
+      .execute({
+        palette: {
+          colors: ["Red", "Green", "Blue"],
+          priorities: [1, 2, 3],
+        },
+      });
     if (paletteRes.palette.colors.length !== 3)
       throw new Error("Expected 3 colors");
     console.log("  PASS: Valid enum arrays work");
@@ -193,12 +200,15 @@ async function main() {
 
     // ========== Test 10: Valid enum maps should work ==========
     console.log("Test 10: Valid enum maps...");
-    const mapRes = await client.procs.serviceEchoColorMap().execute({
-      colorMap: {
-        colorByName: { primary: "Red", secondary: "Blue" },
-        priorityByTask: { task1: 1, task2: 2 },
-      },
-    });
+    const mapRes = await client.rpcs
+      .service()
+      .procs.echoColorMap()
+      .execute({
+        colorMap: {
+          colorByName: { primary: "Red", secondary: "Blue" },
+          priorityByTask: { task1: 1, task2: 2 },
+        },
+      });
     if (mapRes.colorMap.colorByName.primary !== "Red")
       throw new Error("Expected Red");
     console.log("  PASS: Valid enum maps work");

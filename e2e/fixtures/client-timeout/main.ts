@@ -45,8 +45,9 @@ async function main() {
 
   const start = Date.now();
   try {
-    await client.procs
-      .serviceSlow()
+    await client.rpcs
+      .service()
+      .procs.slow()
       .withTimeout({ timeoutMs: 100 })
       .execute({});
 

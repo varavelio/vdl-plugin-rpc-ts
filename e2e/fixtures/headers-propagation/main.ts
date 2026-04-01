@@ -82,7 +82,10 @@ async function testClientLevelHeader(baseUrl: string) {
     .withGlobalHeader("X-Trace-ID", "trace-123-abc")
     .build();
 
-  const result = await client.procs.serviceEcho().execute({ data: "hello" });
+  const result = await client.rpcs
+    .service()
+    .procs.echo()
+    .execute({ data: "hello" });
 
   if (result.receivedTraceId !== "trace-123-abc") {
     throw new Error(
@@ -94,7 +97,10 @@ async function testClientLevelHeader(baseUrl: string) {
 async function testWithoutTraceID(baseUrl: string) {
   const client = NewClient(baseUrl).build();
 
-  const result = await client.procs.serviceEcho().execute({ data: "hello" });
+  const result = await client.rpcs
+    .service()
+    .procs.echo()
+    .execute({ data: "hello" });
 
   if (result.receivedTraceId !== "") {
     throw new Error(
@@ -106,8 +112,9 @@ async function testWithoutTraceID(baseUrl: string) {
 async function testRequestLevelHeader(baseUrl: string) {
   const client = NewClient(baseUrl).build();
 
-  const result = await client.procs
-    .serviceEcho()
+  const result = await client.rpcs
+    .service()
+    .procs.echo()
     .withHeader("X-Trace-ID", "trace-456-def")
     .execute({ data: "test" });
 

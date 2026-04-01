@@ -40,7 +40,7 @@ async function main() {
   const client = NewClient(baseUrl).build();
 
   // Call void operation - should succeed without error
-  await client.procs.servicePing().execute({});
+  await client.rpcs.service().procs.ping().execute({});
 
   if (!wasCalled) {
     throw new Error("RPC handler was not called");

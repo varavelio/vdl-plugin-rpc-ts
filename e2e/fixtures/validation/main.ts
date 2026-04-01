@@ -45,23 +45,29 @@ async function main() {
   const client = NewClient(baseUrl).build();
 
   // Test 1: Valid person - should succeed
-  await client.procs.serviceValidatePerson().execute({
-    person: {
-      name: "John",
-      address: { street: "123 Main", city: "NYC" },
-    },
-  });
+  await client.rpcs
+    .service()
+    .procs.validatePerson()
+    .execute({
+      person: {
+        name: "John",
+        address: { street: "123 Main", city: "NYC" },
+      },
+    });
 
   // Test 2: Valid array - should succeed
-  await client.procs.serviceValidateArray().execute({
-    people: [
-      { name: "Alice", address: { street: "1st St", city: "LA" } },
-      { name: "Bob", address: { street: "2nd St", city: "SF" } },
-    ],
-  });
+  await client.rpcs
+    .service()
+    .procs.validateArray()
+    .execute({
+      people: [
+        { name: "Alice", address: { street: "1st St", city: "LA" } },
+        { name: "Bob", address: { street: "2nd St", city: "SF" } },
+      ],
+    });
 
   // Test 3: Empty array - should succeed
-  await client.procs.serviceValidateArray().execute({
+  await client.rpcs.service().procs.validateArray().execute({
     people: [],
   });
 
