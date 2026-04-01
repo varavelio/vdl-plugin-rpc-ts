@@ -1196,7 +1196,7 @@ var CLIENT_RUNTIME = dedent2(
      * Structure: rpcName \u2192 operationName \u2192 OperationType
      * Used to validate requests and fail fast on typos.
      */
-    private operationDefs: Map<string, Map<string, OperationType>>;
+    private operationDefs: Map<string, Map<string, OperationDefinition>>;
 
     // ---------------------------------------------------------------------------
     // Dynamic Components
