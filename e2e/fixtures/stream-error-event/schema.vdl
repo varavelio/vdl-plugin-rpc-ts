@@ -1,0 +1,9 @@
+@rpc
+type Service {
+  @stream
+  data {
+    input {}
+
+    output {}
+  }
+}
