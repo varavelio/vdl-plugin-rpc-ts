@@ -6,133 +6,232 @@
   />
 </p>
 
-<h1 align="center">VDL Plugin Template</h1>
+<h1 align="center">VDL RPC TypeScript Plugin</h1>
 
 <p align="center">
-  Starter template for building a VDL plugin in TypeScript.
+  Generate TypeScript <strong>RPC clients</strong> and <strong>RPC servers</strong> from annotation-based VDL services.
 </p>
 
-## What is included
+This plugin is RPC-only.
 
-It includes the VDL plugin SDK, a small code generator, formatting and linting tools, a test setup, an included devcontainer, and a GitHub Actions workflow so you can go from idea to releasable plugin quickly.
+It does not generate business types, enums, or constants. Those come from [`varavelio/vdl-plugin-ts`](https://github.com/varavelio/vdl-plugin-ts), and this plugin references them through `typesImport`.
 
-- `src/index.ts` with a minimal `definePlugin(...)` entrypoint.
-- [`@varavel/vdl-plugin-sdk`](https://github.com/varavelio/vdl-plugin-sdk) for typed plugin input/output, typed VDL IR, option helpers, and the `vdl-plugin` build/check CLI.
-- [`@varavel/gen`](https://github.com/varavelio/gen-ts) to make string-based code generation easier.
-- TypeScript configuration ready to go based on `@varavel/vdl-plugin-sdk/tsconfig.base.json`.
-- `Biome` and `dprint` for linting and formatting.
-- `Vitest` for tests.
-- A ready-to-use `.devcontainer/` with Node 24, useful CLI tools, and VS Code extensions for VDL, Biome, dprint, and Vitest.
-- A GitHub Actions workflow in `.github/workflows/ci.yaml` that runs `npm run ci` on pushes, pull requests, and manual triggers.
+All examples below use `varavelio/vdl-plugin-rpc-ts@v0.1.0`.
 
-## Project layout
+## Quick Start
 
-- `.devcontainer/` reproducible development environment.
-- `.github/workflows/ci.yaml` CI pipeline.
-- `biome.json` JavaScript and TypeScript formatting/lint rules.
-- `dprint.json` formatting for Markdown, JSON, and YAML.
-- `src/index.ts` plugin source.
-- `dist/index.js` built plugin bundle consumed by VDL from GitHub releases.
-
-## Getting started
-
-1. Use this repository as a template.
-2. Install dependencies:
-
-```bash
-npm install
-```
-
-3. Implement your plugin in `src/index.ts`.
-4. Run `npm run check` while iterating.
-5. Run `npm run build` to produce `dist/index.js`.
-
-Your plugin entrypoint receives:
-
-- `input.version` the VDL version.
-- `input.options` plugin options from `vdl.config.vdl`.
-- `input.ir` the fully prepared VDL IR used to generate files.
-
-Your plugin returns generated `files`, and it can also return `errors` when generation should stop.
-
-## NPM scripts
-
-- `npm run build` bundles `src/index.ts` into `dist/index.js`.
-- `npm run check` runs TypeScript type checks for the plugin.
-- `npm run format` formats the repository using dprint and Biome.
-- `npm run lint` validates formatting and lint rules using dprint and Biome.
-- `npm run test` runs the Vitest suite. It is configured to pass even if you have not added tests yet.
-- `npm run ci` runs the full verification flow: lint, type-check, test, and build.
-
-## Code generation
-
-This template already includes [`@varavel/gen`](https://www.npmjs.com/package/@varavel/gen).
-
-It is useful when you want to build generated files with predictable indentation and block structure instead of manually concatenating strings.
-
-```ts
-import { newGenerator } from "@varavel/gen";
-
-const g = newGenerator();
-
-g.line("export interface User {");
-g.block(() => {
-  g.line("id: string;");
-  g.line("name: string;");
-});
-g.line("}");
-
-const content = g.toString();
-```
-
-If you want real plugin examples, see the official repositories:
-
-- [`varavelio/vdl-plugin-go`](https://github.com/varavelio/vdl-plugin-go)
-- [`varavelio/vdl-plugin-ts`](https://github.com/varavelio/vdl-plugin-ts)
-
-## Devcontainer and CI
-
-The included devcontainer installs dependencies on creation and gives you a consistent environment with the expected tooling already configured.
-
-If you want to use it, check the [Dev Containers documentation](https://code.visualstudio.com/docs/devcontainers/containers). You need Docker and VS Code (or fork like cursor, antigravity, etc), and using them is strongly recommended because they remove most local setup friction and make the development workflow much easier.
-
-The GitHub workflow uses the devcontainer in CI as well (without you having to do anything extra), so local development and CI stay aligned.
-
-## Releasing and deployment
-
-VDL plugins do not need to be published to npm.
-
-Release flow:
-
-1. Build your plugin with `npm run build`.
-2. Commit your source code and the generated `dist/index.js` file.
-3. Create a GitHub release with a tag such as `v0.1.0` after `dist/index.js` is already committed.
-4. That is enough for VDL users to consume the plugin from GitHub.
-
-This template intentionally keeps `dist/` out of `.gitignore` because `dist/index.js` is part of the distributable plugin.
-
-Example plugin reference in VDL config (`vdl.config.vdl`):
+1. Generate TypeScript models with `varavelio/vdl-plugin-ts`.
+2. Generate RPC client (`target "client"`) and/or RPC server (`target "server"`).
+3. Run your normal VDL generation command (for example: `vdl generate`).
 
 ```vdl
 const config = {
   version 1
   plugins [
     {
-      src "varavelio/vdl-plugin-go@v0.1.0" // GitHub username/repo@version
+      src "varavelio/vdl-plugin-ts@v0.1.3"
       schema "./schema.vdl"
-      outDir "./gen/go"
+      outDir "./generated/types"
       options {
-        // Additional options for the plugin can be specified here
+        importExtension "js"
+      }
+    }
+    {
+      src "varavelio/vdl-plugin-rpc-ts@v0.1.0"
+      schema "./schema.vdl"
+      outDir "./generated/client"
+      options {
+        target "client"
+        typesImport "../types/index.js"
+        importExtension "js"
+      }
+    }
+    {
+      src "varavelio/vdl-plugin-rpc-ts@v0.1.0"
+      schema "./schema.vdl"
+      outDir "./generated/server"
+      options {
+        target "server"
+        typesImport "../types/index.js"
+        importExtension "js"
       }
     }
   ]
 }
 ```
 
-## License note
+If you only need one side, keep only one RPC plugin block.
 
-Using MIT for your plugin is not mandatory, but it is strongly appreciated. A permissive license makes it easier for more people to adopt, study, improve, and contribute back to the ecosystem, which helps everyone benefit from better VDL plugins.
+## Plugin Options
+
+| Option            | Type                     | Required | Default | What it changes                                                                                       |
+| ----------------- | ------------------------ | -------- | ------- | ----------------------------------------------------------------------------------------------------- |
+| `typesImport`     | `string`                 | yes      | -       | Import path pointing to the output generated by `varavelio/vdl-plugin-ts` (used exactly as provided). |
+| `target`          | `"client" \| "server"`   | yes      | -       | Selects what to generate in that invocation. The plugin generates one target at a time.               |
+| `importExtension` | `"none" \| "js" \| "ts"` | no       | `"js"`  | Controls internal imports between generated RPC files. It does not rewrite `typesImport`.             |
+
+## Generated Files
+
+For `target "client"`:
+
+- `client.ts`
+
+For `target "server"`:
+
+- `server.ts`
+- `adapters/node.ts`
+- `adapters/fetch.ts`
+
+If your schema has no discovered `@rpc`, `@proc` or `@stream` operations, no files are emitted.
+
+## What You Get
+
+For `target "client"`:
+
+- `NewClient(baseURL).build()` to create a typed client.
+- Flattened procedure and stream builders under `client.procs.*()` and `client.streams.*()`.
+- Global and operation-level headers (static or dynamic providers).
+- Interceptors.
+- Retry/timeout for procedures and reconnect policies for streams.
+- Stream lifecycle hooks and maximum message size controls.
+
+For `target "server"`:
+
+- `new Server<Props>()` with typed request context.
+- Typed registration APIs for procedures and streams.
+- Middleware at global, RPC, procedure, stream, and stream-emit levels.
+- Global and RPC-level error handlers.
+- Global, RPC-level, and stream-level ping configuration.
+- `createNodeHandler(...)` and `createFetchHandler(...)` adapters for HTTP runtimes.
+
+Both targets include runtime catalogs:
+
+- `VDLPaths`
+- `VDLProcedures`
+- `VDLStreams`
+
+Non-marker annotations are preserved in operation metadata.
+
+## RPC Annotation Model
+
+This plugin follows the VDL annotation model:
+
+- `@rpc` marks a top-level type as an RPC service.
+- `@proc` marks a field as a request-response operation.
+- `@stream` marks a field as a server-streaming operation.
+
+```vdl
+@rpc
+type Messages {
+  @proc
+  send {
+    input {
+      roomId string
+      text string
+    }
+
+    output {
+      accepted bool
+    }
+  }
+
+  @stream
+  events {
+    input {
+      roomId string
+    }
+
+    output {
+      text string
+    }
+  }
+}
+```
+
+## Usage Example
+
+### Client
+
+```ts
+import { NewClient } from "./generated/client/client";
+
+const client = NewClient("http://localhost:3000/rpc")
+  .withGlobalHeader("authorization", "Bearer <token>")
+  .build();
+
+const procOutput = await client.procs.messagesSend().execute({
+  roomId: "room-1",
+  text: "hello",
+});
+
+console.log(procOutput.accepted);
+
+const { stream, cancel } = client.streams.messagesEvents().execute({
+  roomId: "room-1",
+});
+
+for await (const event of stream) {
+  if (!event.ok) {
+    console.error(event.error);
+    break;
+  }
+
+  console.log(event.output.text);
+}
+
+cancel();
+```
+
+### Server (Node.js adapter)
+
+```ts
+import { createServer } from "node:http";
+import { Server } from "./generated/server/server";
+import { createNodeHandler } from "./generated/server/adapters/node";
+
+type Context = { requestId: string };
+
+const rpcServer = new Server<Context>();
+
+rpcServer.rpcs.messages().procs.send().handle(async (_ctx) => {
+  return { accepted: true };
+});
+
+rpcServer.rpcs.messages().streams.events().handle(async (ctx, emit) => {
+  await emit(ctx, { text: `joined ${ctx.input.roomId}` });
+});
+
+const handler = createNodeHandler(
+  rpcServer,
+  () => ({ requestId: "req-1" }),
+  { prefix: "/rpc" },
+);
+
+createServer(async (req, res) => {
+  await handler(req, res);
+}).listen(3000);
+```
+
+### Server (Fetch-compatible adapter)
+
+```ts
+import { Server } from "./generated/server/server";
+import { createFetchHandler } from "./generated/server/adapters/fetch";
+
+const rpcServer = new Server();
+
+export default {
+  fetch: createFetchHandler(rpcServer, undefined, { prefix: "/rpc" }),
+};
+```
+
+## Important Notes
+
+- `baseURL` in `NewClient(baseURL)` should point to your RPC prefix (for example: `https://api.example.com/rpc`).
+- The generated client appends `/{rpcName}/{operationName}` automatically.
+- `typesImport` must point to the generated output from `vdl-plugin-ts`.
+- To generate both client and server, run this plugin twice (one block per `target`).
 
 ## License
 
-This template is released under the MIT License. See [LICENSE](LICENSE).
+This plugin is released under the MIT License. See [LICENSE](LICENSE).
