@@ -626,21 +626,24 @@ function renderCatalogSource(context) {
   }).join("\n");
   return [
     "/**",
-    " * VDLProcedures is a list of all generated procedure definitions.",
+    " * VDLProcedures lists every generated procedure definition with preserved schema metadata.",
+    " * Use it for introspection, tracing, and building operation-aware tooling.",
     " */",
     "export const VDLProcedures: OperationDefinition[] = [",
     procedures,
     "] as const;",
     "",
     "/**",
-    " * VDLStreams is a list of all generated stream definitions.",
+    " * VDLStreams lists every generated stream definition with preserved schema metadata.",
+    " * Use it for introspection, tracing, and building operation-aware tooling.",
     " */",
     "export const VDLStreams: OperationDefinition[] = [",
     streams,
     "] as const;",
     "",
     "/**",
-    " * VDLPaths holds the relative URL paths for all generated RPC operations.",
+    " * VDLPaths maps rpcName -> operationName -> relative URL path.",
+    " * Useful when wiring custom transports or inspecting generated routes.",
     " */",
     "export const VDLPaths = {",
     paths,
@@ -891,7 +894,7 @@ var CORE_RUNTIME = dedent2(
   /**
    * Convenience helper for missing-field validation errors.
    */
-  export function errorMissingRequiredField(message: string): VdlError {
+  function errorMissingRequiredField(message: string): VdlError {
     return new VdlError({
       message,
       category: "ValidationError",
@@ -902,7 +905,7 @@ var CORE_RUNTIME = dedent2(
   /**
    * Sleeps for the given number of milliseconds.
    */
-  export function sleep(ms: number): Promise<void> {
+  function sleep(ms: number): Promise<void> {
     return new Promise((resolve) => setTimeout(resolve, ms));
   }
 `
@@ -1122,6 +1125,9 @@ var CLIENT_RUNTIME = dedent2(
     return applyJitter(delay, config.jitter);
   }
 
+  /**
+   * Normalizes retry config input into safe runtime values.
+   */
   function normalizeRetryConfig(
     config: Partial<RetryConfig>,
     defaultAttempts = 1,
@@ -1136,12 +1142,18 @@ var CLIENT_RUNTIME = dedent2(
     };
   }
 
+  /**
+   * Normalizes timeout config input into safe runtime values.
+   */
   function normalizeTimeoutConfig(config: Partial<TimeoutConfig>): TimeoutConfig {
     return {
       timeoutMs: Math.max(0, config.timeoutMs ?? defaultTimeoutConfig.timeoutMs),
     };
   }
 
+  /**
+   * Normalizes reconnect config input into safe runtime values.
+   */
   function normalizeReconnectConfig(
     config: Partial<ReconnectConfig>,
     defaultAttempts = 30,
@@ -1374,6 +1386,9 @@ var CLIENT_RUNTIME = dedent2(
       this.rpcHeaderProviders.get(rpcName)?.push(provider);
     }
 
+    /**
+     * Resolves one operation definition and verifies its expected kind.
+     */
     private getOperation(
       rpcName: string,
       operationName: string,
@@ -1497,6 +1512,9 @@ var CLIENT_RUNTIME = dedent2(
       }
     }
 
+    /**
+     * Executes the interceptor chain around the provided invoker.
+     */
     private async executeChain(
       reqInfo: RequestInfo,
       invoker: Invoker,
@@ -1510,6 +1528,9 @@ var CLIENT_RUNTIME = dedent2(
       return next(reqInfo);
     }
 
+    /**
+     * Evaluates whether the current failure should trigger another attempt.
+     */
     private async shouldRetry(
       config: RetryConfig,
       context: RetryDecisionContext,
@@ -1521,6 +1542,9 @@ var CLIENT_RUNTIME = dedent2(
       return await config.shouldRetry(context);
     }
 
+    /**
+     * Evaluates whether the current stream failure should trigger reconnect.
+     */
     private async shouldReconnect(
       config: ReconnectConfig,
       context: ReconnectDecisionContext,
@@ -1532,6 +1556,9 @@ var CLIENT_RUNTIME = dedent2(
       return await config.shouldReconnect(context);
     }
 
+    /**
+     * Executes one procedure call with retries, timeout, headers, and interceptors.
+     */
     async callProc(
       rpcName: string,
       procName: string,
@@ -1839,6 +1866,9 @@ var CLIENT_RUNTIME = dedent2(
       return this.executeChain(reqInfo, invoker) as Promise<Response<any>>;
     }
 
+    /**
+     * Opens one stream subscription and returns an async event generator plus a cancel handle.
+     */
     callStream(
       rpcName: string,
       streamName: string,
@@ -2206,12 +2236,17 @@ var CLIENT_RUNTIME = dedent2(
     }
   }
 
+  /**
+   * Internal mutator applied while building an internalClient instance.
+   */
   type internalClientOption = (client: internalClient) => void;
 
+  /** Creates an option that replaces the fetch implementation. */
   function withFetch(fetchFn: FetchLike): internalClientOption {
     return (client) => client.setFetch(fetchFn);
   }
 
+  /** Creates an option that appends one static global header provider. */
   function withGlobalHeader(key: string, value: string): internalClientOption {
     return (client) =>
       client.addHeaderProvider((headers) => {
@@ -2219,38 +2254,48 @@ var CLIENT_RUNTIME = dedent2(
       });
   }
 
+  /** Creates an option that appends one dynamic global header provider. */
   function withHeaderProvider(provider: HeaderProvider): internalClientOption {
     return (client) => client.addHeaderProvider(provider);
   }
 
+  /** Creates an option that appends one interceptor. */
   function withInterceptor(interceptor: Interceptor): internalClientOption {
     return (client) => client.addInterceptor(interceptor);
   }
 
+  /** Creates an option that sets the global retry policy. */
   function withGlobalRetryConfig(conf: RetryConfig): internalClientOption {
     return (client) => client.setGlobalRetryConfig(conf);
   }
 
+  /** Creates an option that sets the global timeout policy. */
   function withGlobalTimeoutConfig(conf: TimeoutConfig): internalClientOption {
     return (client) => client.setGlobalTimeoutConfig(conf);
   }
 
+  /** Creates an option that sets the global reconnect policy. */
   function withGlobalReconnectConfig(
     conf: ReconnectConfig,
   ): internalClientOption {
     return (client) => client.setGlobalReconnectConfig(conf);
   }
 
+  /** Creates an option that sets the global maximum stream message size. */
   function withGlobalMaxMessageSize(size: number): internalClientOption {
     return (client) => client.setGlobalMaxMessageSize(size);
   }
 
+  /**
+   * Fluent builder for constructing an internalClient with layered defaults.
+   */
   class clientBuilder {
     private readonly baseURL: string;
     private readonly procDefs: OperationDefinition[];
     private readonly streamDefs: OperationDefinition[];
     private readonly opts: internalClientOption[] = [];
 
+    /** Creates a new builder bound to the generated operation catalogs. */
     constructor(
       baseURL: string,
       procDefs: OperationDefinition[],
@@ -2261,46 +2306,55 @@ var CLIENT_RUNTIME = dedent2(
       this.streamDefs = streamDefs;
     }
 
+    /** Overrides the fetch implementation used by the internal client. */
     withFetch(fetchFn: FetchLike): clientBuilder {
       this.opts.push(withFetch(fetchFn));
       return this;
     }
 
+    /** Appends one static global header provider. */
     withGlobalHeader(key: string, value: string): clientBuilder {
       this.opts.push(withGlobalHeader(key, value));
       return this;
     }
 
+    /** Appends one dynamic global header provider. */
     withHeaderProvider(provider: HeaderProvider): clientBuilder {
       this.opts.push(withHeaderProvider(provider));
       return this;
     }
 
+    /** Appends one interceptor to the global chain. */
     withInterceptor(interceptor: Interceptor): clientBuilder {
       this.opts.push(withInterceptor(interceptor));
       return this;
     }
 
+    /** Sets the global retry policy default. */
     withGlobalRetryConfig(conf: RetryConfig): clientBuilder {
       this.opts.push(withGlobalRetryConfig(conf));
       return this;
     }
 
+    /** Sets the global timeout policy default. */
     withGlobalTimeoutConfig(conf: TimeoutConfig): clientBuilder {
       this.opts.push(withGlobalTimeoutConfig(conf));
       return this;
     }
 
+    /** Sets the global reconnect policy default. */
     withGlobalReconnectConfig(conf: ReconnectConfig): clientBuilder {
       this.opts.push(withGlobalReconnectConfig(conf));
       return this;
     }
 
+    /** Sets the global maximum stream message size default. */
     withGlobalMaxMessageSize(size: number): clientBuilder {
       this.opts.push(withGlobalMaxMessageSize(size));
       return this;
     }
 
+    /** Builds the final internal client instance. */
     build(): internalClient {
       return new internalClient(
         this.baseURL,
@@ -2479,7 +2533,7 @@ function renderRPCRegistry(g, context) {
   writeDocComment(g, {
     fallback: "Registry exposing every generated RPC service."
   });
-  g.line("export class ClientRPCRegistry {");
+  g.line("class ClientRPCRegistry {");
   g.block(() => {
     g.line("private readonly intClient: internalClient;");
     g.line("constructor(intClient: internalClient) {");
@@ -2515,7 +2569,7 @@ function renderRPCClientClass(g, service) {
     annotations: service.annotations,
     fallback: `Client-side access point for the ${service.name} RPC service and its defaults.`
   });
-  g.line(`export class Client${service.name}RPC {`);
+  g.line(`class Client${service.name}RPC {`);
   g.block(() => {
     g.line("private readonly intClient: internalClient;");
     g.line(`public readonly procs: Client${service.name}Procs;`);
@@ -2571,6 +2625,9 @@ function renderRPCClientClass(g, service) {
     });
     g.line("}");
     g.break();
+    writeDocComment(g, {
+      fallback: `Sets the exact retry configuration for procedures in ${service.name}.`
+    });
     g.line(`withRetryConfig(config: RetryConfig): Client${service.name}RPC {`);
     g.block(() => {
       g.line(
@@ -2594,6 +2651,9 @@ function renderRPCClientClass(g, service) {
     });
     g.line("}");
     g.break();
+    writeDocComment(g, {
+      fallback: `Sets the exact timeout configuration for procedures in ${service.name}.`
+    });
     g.line(
       `withTimeoutConfig(config: TimeoutConfig): Client${service.name}RPC {`
     );
@@ -2619,6 +2679,9 @@ function renderRPCClientClass(g, service) {
     });
     g.line("}");
     g.break();
+    writeDocComment(g, {
+      fallback: `Sets the exact reconnect configuration for streams in ${service.name}.`
+    });
     g.line(
       `withReconnectConfig(config: ReconnectConfig): Client${service.name}RPC {`
     );
@@ -2650,7 +2713,7 @@ function renderRPCProcedureRegistry(g, service) {
   writeDocComment(g, {
     fallback: `Registry exposing every generated procedure builder for ${service.name}.`
   });
-  g.line(`export class Client${service.name}Procs {`);
+  g.line(`class Client${service.name}Procs {`);
   g.block(() => {
     g.line("private readonly intClient: internalClient;");
     g.line("constructor(intClient: internalClient) {");
@@ -2679,7 +2742,7 @@ function renderRPCStreamRegistry(g, service) {
   writeDocComment(g, {
     fallback: `Registry exposing every generated stream builder for ${service.name}.`
   });
-  g.line(`export class Client${service.name}Streams {`);
+  g.line(`class Client${service.name}Streams {`);
   g.block(() => {
     g.line("private readonly intClient: internalClient;");
     g.line("constructor(intClient: internalClient) {");
@@ -2840,6 +2903,9 @@ function renderProcedureBuilder(g, operation) {
     });
     g.line("}");
     g.break();
+    writeDocComment(g, {
+      fallback: "Sets the exact retry configuration for this procedure call, including max attempts."
+    });
     g.line(
       `withRetryConfig(config: RetryConfig): Proc${operation.rpcName}${operation.name}Builder {`
     );
@@ -2863,6 +2929,9 @@ function renderProcedureBuilder(g, operation) {
     });
     g.line("}");
     g.break();
+    writeDocComment(g, {
+      fallback: "Sets the exact timeout configuration for this procedure call."
+    });
     g.line(
       `withTimeoutConfig(config: TimeoutConfig): Proc${operation.rpcName}${operation.name}Builder {`
     );
@@ -2924,6 +2993,11 @@ function renderStreamBuilder(g, operation) {
   const outputHelper = renderRuntimeHelperReference(operation.outputTypeName);
   const responseType = operation.streamResponseTypeName;
   const executeSignature = operation.inputTypeName ? `execute(input: ${inputType})` : `execute(input: Void = {})`;
+  writeDocComment(g, {
+    doc: operation.doc,
+    annotations: operation.annotations,
+    fallback: `Typed stream event envelope yielded by ${operation.rpcName}.${operation.name}.`
+  });
   g.line(`export type ${responseType} = Response<${outputType}>;`);
   g.break();
   g.line(`class Stream${operation.rpcName}${operation.name}Builder {`);
@@ -2989,6 +3063,9 @@ function renderStreamBuilder(g, operation) {
     });
     g.line("}");
     g.break();
+    writeDocComment(g, {
+      fallback: "Sets the exact reconnect configuration for this stream, including max attempts."
+    });
     g.line(
       `withReconnectConfig(config: ReconnectConfig): Stream${operation.rpcName}${operation.name}Builder {`
     );
@@ -3024,6 +3101,9 @@ function renderStreamBuilder(g, operation) {
     });
     g.line("}");
     g.break();
+    writeDocComment(g, {
+      fallback: "Alias of onConnect for compatibility with previous APIs."
+    });
     g.line(
       `withOnConnect(cb: () => void): Stream${operation.rpcName}${operation.name}Builder { return this.onConnect(cb); }`
     );
@@ -3040,6 +3120,9 @@ function renderStreamBuilder(g, operation) {
     });
     g.line("}");
     g.break();
+    writeDocComment(g, {
+      fallback: "Alias of onDisconnect for compatibility with previous APIs."
+    });
     g.line(
       `withOnDisconnect(cb: (error: Error | null) => void): Stream${operation.rpcName}${operation.name}Builder { return this.onDisconnect(cb); }`
     );
@@ -3056,6 +3139,9 @@ function renderStreamBuilder(g, operation) {
     });
     g.line("}");
     g.break();
+    writeDocComment(g, {
+      fallback: "Alias of onReconnect for compatibility with previous APIs."
+    });
     g.line(
       `withOnReconnect(cb: (attempt: number, delayMs: number) => void): Stream${operation.rpcName}${operation.name}Builder { return this.onReconnect(cb); }`
     );
@@ -3507,18 +3593,22 @@ var SERVER_RUNTIME = dedent2(
       this.operation = operation;
     }
 
+    /** RPC service name resolved from the current operation. */
     get rpcName(): string {
       return this.operation.rpcName;
     }
 
+    /** Operation name resolved from the current operation. */
     get operationName(): string {
       return this.operation.name;
     }
 
+    /** Operation kind (procedure or stream). */
     get operationType(): OperationDefinition["type"] {
       return this.operation.type;
     }
 
+    /** Schema annotations preserved for this operation. */
     get annotations(): OperationAnnotation[] {
       return this.operation.annotations;
     }
@@ -3606,7 +3696,7 @@ var SERVER_RUNTIME = dedent2(
   /**
    * Internal function used to deserialize raw JSON input into typed objects.
    */
-  export type DeserializerFunc = (raw: unknown) => Promise<unknown>;
+  type DeserializerFunc = (raw: unknown) => Promise<unknown>;
 
   /**
    * Custom error handler used to transform arbitrary failures into VdlError responses.
@@ -3640,7 +3730,7 @@ var SERVER_RUNTIME = dedent2(
    *
    * @typeParam T - The application context type (props) containing dependencies.
    */
-  export class InternalServer<T> {
+  class InternalServer<T> {
     private readonly operationDefs: Map<string, Map<string, OperationDefinition>>;
     private readonly procHandlers: Map<string, Map<string, ProcHandlerFunc<T, any, any>>>;
     private readonly streamHandlers: Map<string, Map<string, StreamHandlerFunc<T, any, any>>>;
@@ -3956,6 +4046,7 @@ var SERVER_RUNTIME = dedent2(
         closed = true;
       });
 
+      /** Writes to the adapter only while the connection remains open. */
       const safeWrite = (data: string) => {
         if (closed || c.signal.aborted) {
           return;
@@ -3964,6 +4055,7 @@ var SERVER_RUNTIME = dedent2(
         adapter.flush?.();
       };
 
+      /** Resolves ping interval precedence: global -> RPC -> stream. */
       let pingInterval = this.globalStreamConfig.pingIntervalMs || 30000;
       const rpcConfig = this.rpcStreamConfigs.get(rpcName);
       if (rpcConfig?.pingIntervalMs) {
@@ -3977,6 +4069,7 @@ var SERVER_RUNTIME = dedent2(
         pingInterval = 30000;
       }
 
+      /** Emits SSE heartbeat comments to keep intermediaries from timing out idle streams. */
       const pingTimer = setInterval(() => {
         if (closed || c.signal.aborted) {
           clearInterval(pingTimer);
@@ -3986,22 +4079,26 @@ var SERVER_RUNTIME = dedent2(
         safeWrite(": ping\\n\\n");
       }, pingInterval);
 
+      /** Ensures timers are cleared and the adapter is always closed exactly once. */
       const cleanup = () => {
         clearInterval(pingTimer);
         closed = true;
         adapter.end();
       };
 
+      /** Base emit function that serializes typed events into SSE data frames. */
       const baseEmit: EmitFunc<T, any, unknown> = async (_ctx, output) => {
         safeWrite("data: " + JSON.stringify({ ok: true, output }) + "\\n\\n");
       };
 
+      /** Composed emit function after applying stream-level emit middleware. */
       let emitFinal = baseEmit;
       const emitMws = this.streamEmitMiddlewares.get(rpcName)?.get(streamName) ?? [];
       for (let index = emitMws.length - 1; index >= 0; index -= 1) {
         emitFinal = emitMws[index](emitFinal);
       }
 
+      /** Composed request handler after applying stream, RPC, and global middleware. */
       let next: GlobalHandlerFunc<T> = (ctx) =>
         baseHandler(ctx as HandlerContext<T, any>, emitFinal) as Promise<unknown>;
 
@@ -4131,7 +4228,7 @@ function renderServerFacade(g, context) {
   writeDocComment(g, {
     fallback: "Top-level registry exposing every generated RPC service."
   });
-  g.line("export class ServerRPCRegistry<T> {");
+  g.line("class ServerRPCRegistry<T> {");
   g.block(() => {
     g.line("private readonly intServer: InternalServer<T>;");
     g.line("constructor(intServer: InternalServer<T>) {");
@@ -4177,7 +4274,7 @@ function renderServiceClass(g, service) {
     annotations: service.annotations,
     fallback: `Typed registration surface for the ${service.name} RPC service.`
   });
-  g.line(`export class Server${service.name}RPC<T> {`);
+  g.line(`class Server${service.name}RPC<T> {`);
   g.block(() => {
     g.line("private readonly intServer: InternalServer<T>;");
     g.line(`public readonly procs: Server${service.name}Procs<T>;`);
@@ -4232,7 +4329,7 @@ function renderProcedureRegistry2(g, service) {
   writeDocComment(g, {
     fallback: `Registry exposing every generated procedure entry for ${service.name}.`
   });
-  g.line(`export class Server${service.name}Procs<T> {`);
+  g.line(`class Server${service.name}Procs<T> {`);
   g.block(() => {
     g.line("private readonly intServer: InternalServer<T>;");
     g.line(
@@ -4259,7 +4356,7 @@ function renderStreamRegistry2(g, service) {
   writeDocComment(g, {
     fallback: `Registry exposing every generated stream entry for ${service.name}.`
   });
-  g.line(`export class Server${service.name}Streams<T> {`);
+  g.line(`class Server${service.name}Streams<T> {`);
   g.block(() => {
     g.line("private readonly intServer: InternalServer<T>;");
     g.line(
@@ -4286,7 +4383,12 @@ function renderProcedureEntry(g, operation) {
   const inputType = renderRuntimeTypeReference2(operation.inputTypeName);
   const outputType = renderRuntimeTypeReference2(operation.outputTypeName);
   const inputHelper = renderRuntimeHelperReference2(operation.inputTypeName);
-  g.line(`export class Proc${operation.rpcName}${operation.name}Entry<T> {`);
+  writeDocComment(g, {
+    doc: operation.doc,
+    annotations: operation.annotations,
+    fallback: `Typed procedure registration entry for ${operation.rpcName}.${operation.name}.`
+  });
+  g.line(`class Proc${operation.rpcName}${operation.name}Entry<T> {`);
   g.block(() => {
     g.line("private readonly intServer: InternalServer<T>;");
     g.line(
@@ -4377,7 +4479,12 @@ function renderStreamEntry(g, operation) {
   const inputType = renderRuntimeTypeReference2(operation.inputTypeName);
   const outputType = renderRuntimeTypeReference2(operation.outputTypeName);
   const inputHelper = renderRuntimeHelperReference2(operation.inputTypeName);
-  g.line(`export class Stream${operation.rpcName}${operation.name}Entry<T> {`);
+  writeDocComment(g, {
+    doc: operation.doc,
+    annotations: operation.annotations,
+    fallback: `Typed stream registration entry for ${operation.rpcName}.${operation.name}.`
+  });
+  g.line(`class Stream${operation.rpcName}${operation.name}Entry<T> {`);
   g.block(() => {
     g.line("private readonly intServer: InternalServer<T>;");
     g.line(
@@ -4703,7 +4810,7 @@ var NODE_ADAPTER = dedent2(
    * @param prefix - Optional path prefix to strip (e.g., "/rpc")
    * @returns Object with rpcName and operationName, or null if parsing fails
    */
-  export function parseNodeRpcPath(
+  function parseNodeRpcPath(
     url: string,
     prefix?: string,
   ): { rpcName: string; operationName: string } | null {
@@ -4730,16 +4837,16 @@ var NODE_ADAPTER = dedent2(
     return { rpcName, operationName };
   }
 
-/**
- * Options for createNodeHandler.
- */
-export interface NodeHandlerOptions {
   /**
-   * URL path prefix to strip before parsing RPC/operation names.
-   * Example: "/rpc" or "/api/v1"
+   * Options for createNodeHandler.
    */
-  prefix?: string;
-}
+  export interface NodeHandlerOptions {
+    /**
+     * URL path prefix to strip before parsing RPC/operation names.
+     * Example: "/rpc" or "/api/v1"
+     */
+    prefix?: string;
+  }
 
   /**
    * Creates a Node.js HTTP request handler for a VDL Server.
