@@ -1,0 +1,19 @@
+@rpc
+type A {
+  @proc
+  x {
+    input {}
+
+    output {}
+  }
+}
+
+@rpc
+type B {
+  @proc
+  y {
+    input {}
+
+    output {}
+  }
+}

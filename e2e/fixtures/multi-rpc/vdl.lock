@@ -1,0 +1,6 @@
+{
+  "version": 1,
+  "hashes": {
+    "https://raw.githubusercontent.com/varavelio/vdl-plugin-ts/v0.1.3/dist/index.js": "sha256-269aa8804cceb32da437c380339c8be183ad10581b2cf49e9fb481debaf919e6"
+  }
+}
