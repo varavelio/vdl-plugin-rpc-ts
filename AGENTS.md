@@ -25,5 +25,6 @@ When updating this document, do so with the context of the entire document in mi
 - The source is organized by stages: `options` -> `model` -> `emit`, with shared helpers in `src/shared/`.
 - `src/stages/emit/files/client/` and `src/stages/emit/files/server/` keep target-specific emit logic separate, with runtime source isolated per target.
 - Generated RPC code should reuse `vdl-plugin-ts` runtime helpers for validation and hydration instead of re-implementing business type logic.
+- Keep generated module exports intentional: expose user-facing entry points, but keep internal registries/runtime helpers unexported unless they are part of the external API contract.
 - `e2e/fixtures/` contains static end-to-end fixtures ported from the old RPC test corpus. Each fixture is self-contained and validated by running VDL generation, TypeScript compilation, and runtime execution.
 - Keep the E2E orchestrator readable by separating fixture discovery and execution phases (`clean -> generate -> typecheck -> runtime`) into small helpers.
