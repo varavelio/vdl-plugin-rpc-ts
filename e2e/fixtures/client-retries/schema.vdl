@@ -1,0 +1,9 @@
+@rpc
+type Service {
+  @proc
+  flaky {
+    input {}
+
+    output {}
+  }
+}
