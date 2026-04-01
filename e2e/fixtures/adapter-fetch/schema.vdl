@@ -1,0 +1,39 @@
+@rpc
+type Greeter {
+  @proc
+  hello {
+    input {
+      name string
+    }
+
+    output {
+      greeting string
+    }
+  }
+
+  @proc
+  echo {
+    input {
+      message string
+    }
+
+    output {
+      message string
+    }
+  }
+}
+
+@rpc
+type Calculator {
+  @proc
+  add {
+    input {
+      a int
+      b int
+    }
+
+    output {
+      result int
+    }
+  }
+}
