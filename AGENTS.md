@@ -23,6 +23,7 @@ When updating this document, do so with the context of the entire document in mi
 - Keep implementations aligned with SDK patterns from the manual.
 - Use the SDK utility functions when possible to avoid duplicating code.
 - Prefer SDK-native plugin errors (`fail`, `assert`, `PluginError`) and rely on `definePlugin` for top-level error normalization instead of maintaining custom error wrappers.
+- Keep stage APIs fail-fast: resolve/model helpers should return concrete values and throw SDK errors when invalid, leaving top-level normalization to `definePlugin`.
 - The source is organized by stages: `options` -> `model` -> `emit`, with shared helpers in `src/shared/`.
 - `src/stages/emit/files/client/` and `src/stages/emit/files/server/` keep target-specific emit logic separate, with runtime source isolated per target.
 - Generated RPC code should reuse `vdl-plugin-ts` runtime helpers for validation and hydration instead of re-implementing business type logic.
