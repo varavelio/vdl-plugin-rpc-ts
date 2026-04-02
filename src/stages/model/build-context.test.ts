@@ -14,7 +14,7 @@ import { createGeneratorContext } from "./build-context";
 
 describe("createGeneratorContext", () => {
   it("models annotation-based RPC services and operations", () => {
-    const result = createGeneratorContext({
+    const context = createGeneratorContext({
       input: pluginInput({
         ir: schema({
           types: [
@@ -58,13 +58,12 @@ describe("createGeneratorContext", () => {
       },
     });
 
-    expect(result.errors).toEqual([]);
-    expect(result.context?.services).toHaveLength(1);
-    expect(result.context?.procedures).toHaveLength(1);
-    expect(result.context?.streams).toHaveLength(0);
+    expect(context.services).toHaveLength(1);
+    expect(context.procedures).toHaveLength(1);
+    expect(context.streams).toHaveLength(0);
 
-    const service = result.context?.services[0];
-    const operation = result.context?.procedures[0];
+    const service = context.services[0];
+    const operation = context.procedures[0];
 
     expect(service).toMatchObject({
       name: "Messages",
@@ -85,7 +84,7 @@ describe("createGeneratorContext", () => {
   });
 
   it("allows operations that omit input and output", () => {
-    const result = createGeneratorContext({
+    const context = createGeneratorContext({
       input: pluginInput({
         ir: schema({
           types: [
@@ -110,8 +109,7 @@ describe("createGeneratorContext", () => {
       },
     });
 
-    expect(result.errors).toEqual([]);
-    expect(result.context?.procedures[0]).toMatchObject({
+    expect(context.procedures[0]).toMatchObject({
       name: "ping",
       inputTypeName: undefined,
       outputTypeName: undefined,

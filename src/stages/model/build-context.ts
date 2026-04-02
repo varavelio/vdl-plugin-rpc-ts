@@ -2,7 +2,6 @@ import type {
   Annotation,
   Field,
   PluginInput,
-  PluginOutputError,
   TypeDef,
 } from "@varavel/vdl-plugin-sdk";
 import {
@@ -30,7 +29,7 @@ import type {
 export function createGeneratorContext(options: {
   input: PluginInput;
   generatorOptions: GeneratorOptions;
-}): { context?: GeneratorContext; errors: PluginOutputError[] } {
+}): GeneratorContext {
   const services: ServiceDescriptor[] = [];
 
   for (const typeDef of options.input.ir.types) {
@@ -50,15 +49,12 @@ export function createGeneratorContext(options: {
   }
 
   return {
-    errors: [],
-    context: {
-      input: options.input,
-      schema: options.input.ir,
-      options: options.generatorOptions,
-      services,
-      procedures,
-      streams,
-    },
+    input: options.input,
+    schema: options.input.ir,
+    options: options.generatorOptions,
+    services,
+    procedures,
+    streams,
   };
 }
 
