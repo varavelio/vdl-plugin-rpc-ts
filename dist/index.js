@@ -39,11 +39,47 @@ __export(index_exports, {
 });
 module.exports = __toCommonJS(index_exports);
 
+// node_modules/@varavel/vdl-plugin-sdk/dist/core/errors.js
+var _a;
+var PluginError = (_a = class extends Error {
+  constructor(message, position) {
+    super(message);
+    this.name = "PluginError";
+    this.position = position;
+  }
+}, __name(_a, "PluginError"), _a);
+function fail(message, position) {
+  throw new PluginError(message, position);
+}
+__name(fail, "fail");
+function assert(condition, message, position) {
+  if (!condition) throw new PluginError(message, position);
+}
+__name(assert, "assert");
+
 // node_modules/@varavel/vdl-plugin-sdk/dist/core/define-plugin.js
 function definePlugin(handler) {
-  return handler;
+  return (input) => {
+    try {
+      return handler(input);
+    } catch (error) {
+      return {
+        files: [],
+        errors: [toPluginError(error)]
+      };
+    }
+  };
 }
 __name(definePlugin, "definePlugin");
+function toPluginError(error) {
+  if (error instanceof PluginError) return {
+    message: error.message,
+    position: error.position
+  };
+  if (error instanceof Error) return { message: error.message };
+  return { message: "An unknown generation error occurred." };
+}
+__name(toPluginError, "toPluginError");
 
 // node_modules/@varavel/vdl-plugin-sdk/dist/_virtual/_@oxc-project_runtime@0.115.0/helpers/typeof.js
 function _typeof(o) {
@@ -112,64 +148,37 @@ function _objectSpread2(e) {
 }
 __name(_objectSpread2, "_objectSpread2");
 
-// node_modules/@varavel/vdl-plugin-sdk/dist/utils/rpc/validate-ir-for-rpc.js
+// node_modules/@varavel/vdl-plugin-sdk/dist/utils/rpc/assert-valid-ir-for-rpc.js
 var RPC_ANNOTATION_NAME = "rpc";
 var PROC_ANNOTATION_NAME = "proc";
 var STREAM_ANNOTATION_NAME = "stream";
-function validateIrForRpc(ir) {
+function assertValidIrForRpc(ir) {
   const rpcTypes = ir.types.filter((typeDef) => {
     return hasAnnotation(typeDef.annotations, RPC_ANNOTATION_NAME);
   });
-  if (rpcTypes.length === 0) return;
-  const errors = [];
-  for (const rpcType of rpcTypes) validateRpcType(rpcType, errors);
-  return errors.length === 0 ? void 0 : errors;
+  for (const rpcType of rpcTypes) assertValidRpcType(rpcType);
 }
-__name(validateIrForRpc, "validateIrForRpc");
-function validateRpcType(typeDef, errors) {
+__name(assertValidIrForRpc, "assertValidIrForRpc");
+function assertValidRpcType(typeDef) {
   var _typeDef$typeRef$obje;
-  if (typeDef.typeRef.kind !== "object") {
-    errors.push({
-      message: `Type ${JSON.stringify(typeDef.name)} is annotated with @rpc and must be an object type.`,
-      position: typeDef.position
-    });
-    return;
-  }
+  assert(typeDef.typeRef.kind === "object", `Type ${JSON.stringify(typeDef.name)} is annotated with @rpc and must be an object type.`, typeDef.position);
   const fields = (_typeDef$typeRef$obje = typeDef.typeRef.objectFields) !== null && _typeDef$typeRef$obje !== void 0 ? _typeDef$typeRef$obje : [];
-  for (const field of fields) validateRpcOperationField(typeDef, field, errors);
+  for (const field of fields) assertValidRpcOperationField(typeDef, field);
 }
-__name(validateRpcType, "validateRpcType");
-function validateRpcOperationField(rpcType, field, errors) {
+__name(assertValidRpcType, "assertValidRpcType");
+function assertValidRpcOperationField(rpcType, field) {
   const hasProc = hasAnnotation(field.annotations, PROC_ANNOTATION_NAME);
   const hasStream = hasAnnotation(field.annotations, STREAM_ANNOTATION_NAME);
   if (!hasProc && !hasStream) return;
-  if (hasProc && hasStream) {
-    errors.push({
-      message: `Field ${JSON.stringify(`${rpcType.name}.${field.name}`)} cannot be annotated with both @proc and @stream.`,
-      position: field.position
-    });
-    return;
-  }
+  if (hasProc && hasStream) fail(`Field ${JSON.stringify(`${rpcType.name}.${field.name}`)} cannot be annotated with both @proc and @stream.`, field.position);
   const operationAnnotation = hasProc ? PROC_ANNOTATION_NAME : STREAM_ANNOTATION_NAME;
-  if (field.typeRef.kind !== "object") {
-    errors.push({
-      message: `Field ${JSON.stringify(`${rpcType.name}.${field.name}`)} is annotated with @${operationAnnotation} and must be an object type.`,
-      position: field.position
-    });
-    return;
-  }
+  assert(field.typeRef.kind === "object", `Field ${JSON.stringify(`${rpcType.name}.${field.name}`)} is annotated with @${operationAnnotation} and must be an object type.`, field.position);
   const inputField = findFieldByName(field.typeRef.objectFields, "input");
   const outputField = findFieldByName(field.typeRef.objectFields, "output");
-  if (inputField && inputField.typeRef.kind !== "object") errors.push({
-    message: `Field "input" in operation ${JSON.stringify(`${rpcType.name}.${field.name}`)} must be an object type when present.`,
-    position: withFallbackFile(inputField.position, field.position)
-  });
-  if (outputField && outputField.typeRef.kind !== "object") errors.push({
-    message: `Field "output" in operation ${JSON.stringify(`${rpcType.name}.${field.name}`)} must be an object type when present.`,
-    position: withFallbackFile(outputField.position, field.position)
-  });
+  if (inputField && inputField.typeRef.kind !== "object") fail(`Field "input" in operation ${JSON.stringify(`${rpcType.name}.${field.name}`)} must be an object type when present.`, withFallbackFile(inputField.position, field.position));
+  if (outputField && outputField.typeRef.kind !== "object") fail(`Field "output" in operation ${JSON.stringify(`${rpcType.name}.${field.name}`)} must be an object type when present.`, withFallbackFile(outputField.position, field.position));
 }
-__name(validateRpcOperationField, "validateRpcOperationField");
+__name(assertValidRpcOperationField, "assertValidRpcOperationField");
 function hasAnnotation(annotations, name) {
   return annotations.some((annotation) => annotation.name === name);
 }
@@ -184,34 +193,6 @@ function withFallbackFile(primary, fallback) {
 }
 __name(withFallbackFile, "withFallbackFile");
 
-// src/shared/errors.ts
-var _GenerationError = class _GenerationError extends Error {
-  constructor(message, position) {
-    super(message);
-    this.name = "GenerationError";
-    this.position = position;
-  }
-};
-__name(_GenerationError, "GenerationError");
-var GenerationError = _GenerationError;
-function toPluginOutputError(error) {
-  if (error instanceof GenerationError) {
-    return {
-      message: error.message,
-      position: error.position
-    };
-  }
-  if (error instanceof Error) {
-    return {
-      message: error.message
-    };
-  }
-  return {
-    message: "An unknown generation error occurred."
-  };
-}
-__name(toPluginOutputError, "toPluginOutputError");
-
 // node_modules/@varavel/vdl-plugin-sdk/dist/node_modules/es-toolkit/dist/array/compact.js
 function compact(arr) {
   const result = [];
@@ -224,8 +205,8 @@ function compact(arr) {
 __name(compact, "compact");
 
 // node_modules/@varavel/gen/dist/index.js
-var _a;
-var Generator = (_a = class {
+var _a2;
+var Generator = (_a2 = class {
   constructor() {
     this.chunks = [];
     this.indentLevel = 0;
@@ -333,7 +314,7 @@ var Generator = (_a = class {
   toString() {
     return this.chunks.join("");
   }
-}, __name(_a, "Generator"), _a);
+}, __name(_a2, "Generator"), _a2);
 function newGenerator() {
   return new Generator();
 }
@@ -426,8 +407,8 @@ function writeDocComment(g, options) {
 }
 __name(writeDocComment, "writeDocComment");
 function buildDocCommentLines(options) {
-  var _a2, _b, _c;
-  const lines = (_c = (_b = (_a2 = options.doc) != null ? _a2 : options.fallback) == null ? void 0 : _b.split("\n")) != null ? _c : [];
+  var _a3, _b, _c;
+  const lines = (_c = (_b = (_a3 = options.doc) != null ? _a3 : options.fallback) == null ? void 0 : _b.split("\n")) != null ? _c : [];
   const deprecatedMessage = getDeprecatedMessage(options.annotations);
   if (!deprecatedMessage) {
     return lines;
@@ -5016,22 +4997,19 @@ function createGeneratorContext(options) {
     streams.push(...service.streams);
   }
   return {
-    errors: [],
-    context: {
-      input: options.input,
-      schema: options.input.ir,
-      options: options.generatorOptions,
-      services,
-      procedures,
-      streams
-    }
+    input: options.input,
+    schema: options.input.ir,
+    options: options.generatorOptions,
+    services,
+    procedures,
+    streams
   };
 }
 __name(createGeneratorContext, "createGeneratorContext");
 function buildServiceDescriptor(typeDef) {
-  var _a2;
+  var _a3;
   const operations = [];
-  for (const field of (_a2 = typeDef.typeRef.objectFields) != null ? _a2 : []) {
+  for (const field of (_a3 = typeDef.typeRef.objectFields) != null ? _a3 : []) {
     const operation = buildOperationDescriptor(typeDef, field);
     if (operation) {
       operations.push(operation);
@@ -5083,8 +5061,8 @@ function buildOperationDescriptor(serviceType, field) {
 }
 __name(buildOperationDescriptor, "buildOperationDescriptor");
 function findOperationField(operationField, name) {
-  var _a2;
-  return (_a2 = operationField.typeRef.objectFields) == null ? void 0 : _a2.find(
+  var _a3;
+  return (_a3 = operationField.typeRef.objectFields) == null ? void 0 : _a3.find(
     (field) => field.name === name
   );
 }
@@ -5114,37 +5092,26 @@ __name(getOptionString, "getOptionString");
 
 // src/stages/options/resolve.ts
 function resolveGeneratorOptions(input) {
-  const targetRaw = getOptionString(input.options, "target", "").trim();
   const typesImport = getOptionString(input.options, "typesImport", "").trim();
-  const importExtensionRaw = getOptionString(input.options, "importExtension", "js").trim();
-  const errors = [];
-  const target = isGeneratorTarget(targetRaw) ? targetRaw : void 0;
-  const importExtension = isImportExtension(importExtensionRaw) ? importExtensionRaw : void 0;
-  if (!typesImport) {
-    errors.push({
-      message: 'Missing required option "typesImport". Point it to the output generated by varavelio/vdl-plugin-ts.'
-    });
-  }
-  if (!target) {
-    errors.push({
-      message: 'Missing or invalid option "target". Use either "client" or "server".'
-    });
-  }
-  if (!importExtension) {
-    errors.push({
-      message: `Invalid option "importExtension". Use one of: ${IMPORT_EXTENSION_VALUES.map((value) => JSON.stringify(value)).join(", ")}.`
-    });
-  }
-  if (errors.length > 0 || !target || !importExtension) {
-    return { errors };
-  }
+  assert(
+    typesImport,
+    // Truthy check
+    'Missing required option "typesImport". Point it to the output generated by varavelio/vdl-plugin-ts.'
+  );
+  const target = getOptionString(input.options, "target", "").trim();
+  assert(
+    isGeneratorTarget(target),
+    'Missing or invalid option "target". Use either "client" or "server".'
+  );
+  const importExtension = getOptionString(input.options, "importExtension", "js").trim();
+  assert(
+    isImportExtension(importExtension),
+    `Invalid option "importExtension". Use one of: ${IMPORT_EXTENSION_VALUES.map((value) => JSON.stringify(value)).join(", ")}.`
+  );
   return {
-    errors: [],
-    options: {
-      target,
-      typesImport,
-      importExtension
-    }
+    target,
+    typesImport,
+    importExtension
   };
 }
 __name(resolveGeneratorOptions, "resolveGeneratorOptions");
@@ -5159,30 +5126,11 @@ __name(isImportExtension, "isImportExtension");
 
 // src/generate.ts
 function generate(input) {
-  try {
-    const optionsResult = resolveGeneratorOptions(input);
-    if (optionsResult.errors.length > 0 || !optionsResult.options) {
-      return { errors: optionsResult.errors };
-    }
-    const rpcValidationErrors = validateIrForRpc(input.ir);
-    if (rpcValidationErrors) {
-      return { errors: rpcValidationErrors };
-    }
-    const contextResult = createGeneratorContext({
-      input,
-      generatorOptions: optionsResult.options
-    });
-    if (contextResult.errors.length > 0 || !contextResult.context) {
-      return { errors: contextResult.errors };
-    }
-    return {
-      files: generateFiles(contextResult.context)
-    };
-  } catch (error) {
-    return {
-      errors: [toPluginOutputError(error)]
-    };
-  }
+  const generatorOptions = resolveGeneratorOptions(input);
+  assertValidIrForRpc(input.ir);
+  const context = createGeneratorContext({ input, generatorOptions });
+  const files = generateFiles(context);
+  return { files };
 }
 __name(generate, "generate");
 
