@@ -163,42 +163,38 @@ describe("generate", () => {
     );
   });
 
-  it("returns SDK RPC validation errors before modeling", () => {
-    const output = generate(
-      pluginInput({
-        ir: schema({
-          types: [
-            typeDef(
-              "Broken",
-              objectType([
-                field(
-                  "oops",
-                  objectType([field("input", primitiveType("string"))]),
-                  {
-                    annotations: [annotation("proc")],
-                  },
-                ),
-              ]),
-              {
-                annotations: [annotation("rpc")],
-              },
-            ),
-          ],
+  it("throws SDK RPC validation errors before modeling", () => {
+    expect(() =>
+      generate(
+        pluginInput({
+          ir: schema({
+            types: [
+              typeDef(
+                "Broken",
+                objectType([
+                  field(
+                    "oops",
+                    objectType([field("input", primitiveType("string"))]),
+                    {
+                      annotations: [annotation("proc")],
+                    },
+                  ),
+                ]),
+                {
+                  annotations: [annotation("rpc")],
+                },
+              ),
+            ],
+          }),
+          options: {
+            target: "server",
+            typesImport: "../types/index.js",
+          },
         }),
-        options: {
-          target: "server",
-          typesImport: "../types/index.js",
-        },
-      }),
+      ),
+    ).toThrowError(
+      'Field "input" in operation "Broken.oops" must be an object type when present.',
     );
-
-    expect(output.files).toBeUndefined();
-    expect(output.errors).toEqual([
-      expect.objectContaining({
-        message:
-          'Field "input" in operation "Broken.oops" must be an object type when present.',
-      }),
-    ]);
   });
 
   it("emits no files when the schema has no RPC operations", () => {
