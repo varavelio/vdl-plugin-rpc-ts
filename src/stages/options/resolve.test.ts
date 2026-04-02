@@ -13,42 +13,30 @@ describe("resolveGeneratorOptions", () => {
       }),
     );
 
-    expect(result.errors).toEqual([]);
-    expect(result.options).toEqual({
+    expect(result).toEqual({
       target: "client",
       typesImport: "../types/index.js",
       importExtension: "js",
     });
   });
 
-  it("reports missing required options", () => {
-    const result = resolveGeneratorOptions(irb.pluginInput());
-
-    expect(result.options).toBeUndefined();
-    expect(result.errors).toEqual([
-      expect.objectContaining({
-        message: expect.stringContaining("typesImport"),
-      }),
-      expect.objectContaining({ message: expect.stringContaining("target") }),
-    ]);
+  it("fails when required options are missing", () => {
+    expect(() => resolveGeneratorOptions(irb.pluginInput())).toThrowError(
+      /typesImport/,
+    );
   });
 
-  it("reports invalid import extensions", () => {
-    const result = resolveGeneratorOptions(
-      irb.pluginInput({
-        options: {
-          target: "server",
-          typesImport: "../types/index.js",
-          importExtension: "mjs",
-        },
-      }),
-    );
-
-    expect(result.options).toBeUndefined();
-    expect(result.errors).toEqual([
-      expect.objectContaining({
-        message: expect.stringContaining("importExtension"),
-      }),
-    ]);
+  it("fails on invalid import extensions", () => {
+    expect(() =>
+      resolveGeneratorOptions(
+        irb.pluginInput({
+          options: {
+            target: "server",
+            typesImport: "../types/index.js",
+            importExtension: "mjs",
+          },
+        }),
+      ),
+    ).toThrowError(/importExtension/);
   });
 });
