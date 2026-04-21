@@ -12,6 +12,15 @@
   Generate TypeScript <strong>RPC clients</strong> and <strong>RPC servers</strong> from annotation-based VDL services.
 </p>
 
+<p align="center">
+  <a href="https://varavel.com">
+    <img src="https://cdn.jsdelivr.net/gh/varavelio/brand@1.0.0/dist/badges/project.svg" alt="A Varavel project"/>
+  </a>
+  <a href="https://varavel.com/vdl">
+    <img src="https://cdn.jsdelivr.net/gh/varavelio/brand@1.0.0/dist/badges/vdl-plugin.svg" alt="VDL Plugin"/>
+  </a>
+</p>
+
 This plugin is RPC-only.
 
 It does not generate business types, enums, or constants. Those come from [`varavelio/vdl-plugin-ts`](https://github.com/varavelio/vdl-plugin-ts), and this plugin references them through `typesImport`.
@@ -193,19 +202,23 @@ type Context = { requestId: string };
 
 const rpcServer = new Server<Context>();
 
-rpcServer.rpcs.messages().procs.send().handle(async (_ctx) => {
-  return { accepted: true };
-});
+rpcServer.rpcs
+  .messages()
+  .procs.send()
+  .handle(async (_ctx) => {
+    return { accepted: true };
+  });
 
-rpcServer.rpcs.messages().streams.events().handle(async (ctx, emit) => {
-  await emit(ctx, { text: `joined ${ctx.input.roomId}` });
-});
+rpcServer.rpcs
+  .messages()
+  .streams.events()
+  .handle(async (ctx, emit) => {
+    await emit(ctx, { text: `joined ${ctx.input.roomId}` });
+  });
 
-const handler = createNodeHandler(
-  rpcServer,
-  () => ({ requestId: "req-1" }),
-  { prefix: "/rpc" },
-);
+const handler = createNodeHandler(rpcServer, () => ({ requestId: "req-1" }), {
+  prefix: "/rpc",
+});
 
 createServer(async (req, res) => {
   await handler(req, res);
